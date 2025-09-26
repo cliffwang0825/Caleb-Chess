@@ -73,6 +73,8 @@ let menuThemeOptions;
 let inGameThemeSelect;
 let menuAnimationToggle;
 let inGameAnimationToggle;
+let victoryBanner;
+let victoryMessage;
 
 let gameState = null;
 
@@ -268,6 +270,7 @@ function showMenuScreen() {
   if (gameScreen) {
     gameScreen.classList.add('hidden');
   }
+  hideVictoryBanner();
 }
 
 function showGameScreen() {
@@ -1100,18 +1103,39 @@ function handleSquareClick(row, col) {
   renderBoard(gameState);
 }
 
+function showVictoryBanner(message) {
+  if (!victoryBanner || !victoryMessage) return;
+  victoryMessage.textContent = message;
+  victoryBanner.classList.remove('hidden');
+}
+
+function hideVictoryBanner() {
+  if (!victoryBanner || !victoryMessage) return;
+  victoryMessage.textContent = '';
+  if (!victoryBanner.classList.contains('hidden')) {
+    victoryBanner.classList.add('hidden');
+  }
+}
+
 function updateStatus(state) {
   if (!state) return;
   const turnText = state.turn === 'white' ? 'White to move' : 'Black to move';
   turnIndicator.textContent = turnText;
 
   if (state.gameOver) {
-    statusIndicator.textContent = state.winner
+    const message = state.winner
       ? `Checkmate! ${capitalize(state.winner)} wins.`
       : 'Draw by stalemate.';
+    statusIndicator.textContent = message;
+    if (state.winner) {
+      showVictoryBanner(message);
+    } else {
+      hideVictoryBanner();
+    }
     return;
   }
 
+  hideVictoryBanner();
   const inCheck = isKingInCheck(state.board, state.turn);
   statusIndicator.textContent = inCheck ? 'Check!' : 'Game in progress';
 }
@@ -1254,6 +1278,7 @@ function startNewGame(options = {}) {
   applyThemeToDocument(theme);
   gameState = createInitialState({ mode, difficulty, theme });
   clearSelection();
+  hideVictoryBanner();
   renderBoard(gameState);
   updateStatus(gameState);
   maybeTriggerAI();
@@ -1283,6 +1308,8 @@ function setupUI() {
   inGameSoundStatusLabel = document.getElementById('game-sound-status');
   inGameAnimationStatusLabel = document.getElementById('game-animation-status');
   newGameButton = document.getElementById('new-game');
+  victoryBanner = document.getElementById('victory-banner');
+  victoryMessage = document.getElementById('victory-message');
 
   bindAudioUnlock();
 
@@ -1376,6 +1403,7 @@ function setupUI() {
   pendingSettings.mode = menuModeSelect ? menuModeSelect.value : pendingSettings.mode;
   pendingSettings.difficulty = getSelectedMenuDifficulty();
   pendingSettings.theme = getSelectedMenuTheme();
+  hideVictoryBanner();
 }
 
 function init() {

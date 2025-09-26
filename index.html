@@ -64,16 +64,10 @@
           </div>
         </div>
 
-        <div class="menu-group sound-group">
-          <span class="menu-control">Sound Effects</span>
-          <div class="menu-toggle-row">
+        <div class="menu-group toggles-group">
+          <span class="menu-control">Audio &amp; Effects</span>
+          <div class="menu-toggle-row dual-toggle-row">
             <button type="button" id="sound-toggle" class="menu-toggle-button active" aria-pressed="true">Sound On</button>
-          </div>
-        </div>
-
-        <div class="menu-group fx-group">
-          <span class="menu-control">Animation &amp; Special FX</span>
-          <div class="menu-toggle-row">
             <button type="button" id="animation-toggle" class="menu-toggle-button active" aria-pressed="true">FX On</button>
           </div>
         </div>
@@ -119,6 +113,9 @@
       </section>
       <section class="board-wrapper">
         <div id="chessboard" class="board" aria-label="Chess board" role="grid"></div>
+        <div id="victory-banner" class="victory-banner hidden" role="status" aria-live="assertive">
+          <p id="victory-message"></p>
+        </div>
       </section>
     </section>
   </main>
