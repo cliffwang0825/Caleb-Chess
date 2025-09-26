@@ -1,7 +1,9 @@
 :root {
   --light-square: #f0d9b5;
   --dark-square: #b58863;
-  --board-size: min(90vw, 480px);
+  --highlight: rgba(255, 255, 0, 0.5);
+  --move-highlight: rgba(30, 144, 255, 0.5);
+  --board-size: min(90vw, 520px);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -22,12 +24,72 @@ body {
 .page {
   text-align: center;
   padding: 1.5rem;
+  max-width: 960px;
 }
 
 .title {
   margin-bottom: 1rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  background-color: rgba(0, 0, 0, 0.35);
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  min-width: 180px;
+}
+
+select,
+button {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+}
+
+select {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  appearance: none;
+}
+
+button {
+  cursor: pointer;
+  background: linear-gradient(135deg, #ff9966, #ff5e62);
+  color: #fff;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.status {
+  margin-bottom: 1.25rem;
+  background-color: rgba(0, 0, 0, 0.35);
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  display: inline-block;
+  text-align: left;
+}
+
+.status p {
+  margin: 0.25rem 0;
 }
 
 .board-wrapper {
@@ -56,6 +118,8 @@ body {
   justify-content: center;
   align-items: center;
   font-size: calc(var(--board-size) / 10);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .square.light {
@@ -64,6 +128,31 @@ body {
 
 .square.dark {
   background-color: var(--dark-square);
+}
+
+.square.selected::before,
+.square.legal-move::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.square.selected::before {
+  background-color: var(--highlight);
+}
+
+.square.legal-move::before {
+  background-color: var(--move-highlight);
+}
+
+.square.check::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 0, 0, 0.35);
+  pointer-events: none;
 }
 
 .square .piece {
@@ -81,4 +170,15 @@ body {
 
 .square.dark[data-coordinate]::after {
   color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 600px) {
+  .control {
+    min-width: 140px;
+  }
+
+  .status {
+    width: 100%;
+    text-align: center;
+  }
 }

@@ -9,6 +9,28 @@
 <body>
   <main class="page">
     <h1 class="title">Caleb Chess</h1>
+    <section class="controls" aria-label="Game controls">
+      <label class="control">Mode
+        <select id="mode-select" aria-label="Select game mode">
+          <option value="human">Human vs Human</option>
+          <option value="ai-white">Play vs Computer (You are White)</option>
+          <option value="ai-black">Play vs Computer (You are Black)</option>
+        </select>
+      </label>
+      <label class="control">Difficulty
+        <select id="difficulty-select" aria-label="Select AI difficulty">
+          <option value="easy">Easy</option>
+          <option value="normal" selected>Normal</option>
+          <option value="hard">Hard</option>
+          <option value="pro">Pro</option>
+        </select>
+      </label>
+      <button id="new-game" type="button">New Game</button>
+    </section>
+    <section class="status" aria-live="polite">
+      <p id="turn-indicator">White to move</p>
+      <p id="game-status">Game in progress</p>
+    </section>
     <section class="board-wrapper">
       <div id="chessboard" class="board" aria-label="Chess board" role="grid"></div>
     </section>
