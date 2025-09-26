@@ -83,214 +83,14 @@ let pendingSettings = {
 let audioContext = null;
 let audioUnlockBound = false;
 
-const svgNS = 'http://www.w3.org/2000/svg';
-let gradientCounter = 0;
-
-function createSvgElement(tag, attributes = {}) {
-  const element = document.createElementNS(svgNS, tag);
-  Object.entries(attributes).forEach(([key, value]) => {
-    element.setAttribute(key, value);
-  });
-  return element;
-}
-
-function createGradient(svg, color) {
-  const gradientId = `piece-gradient-${color}-${gradientCounter++}`;
-  const defs = createSvgElement('defs');
-  const gradient = createSvgElement('linearGradient', {
-    id: gradientId,
-    x1: '0%',
-    y1: '0%',
-    x2: '0%',
-    y2: '100%'
-  });
-
-  const stops = color === 'white'
-    ? [
-        { offset: '0%', color: '#ffffff', opacity: '1' },
-        { offset: '55%', color: '#dde4f5', opacity: '1' },
-        { offset: '100%', color: '#b6c0d6', opacity: '1' }
-      ]
-    : [
-        { offset: '0%', color: '#6f7b92', opacity: '1' },
-        { offset: '55%', color: '#232a38', opacity: '1' },
-        { offset: '100%', color: '#090d15', opacity: '1' }
-      ];
-
-  stops.forEach((stop) => {
-    gradient.appendChild(
-      createSvgElement('stop', {
-        offset: stop.offset,
-        'stop-color': stop.color,
-        'stop-opacity': stop.opacity
-      })
-    );
-  });
-
-  defs.appendChild(gradient);
-  svg.appendChild(defs);
-  return gradientId;
-}
-
-const pieceArtFactories = {
-  p: ({ group, accentColor }) => {
-    const head = createSvgElement('circle', { cx: '50', cy: '26', r: '12' });
-    const collar = createSvgElement('rect', { x: '40', y: '38', width: '20', height: '6', rx: '3' });
-    const body = createSvgElement('path', {
-      d: 'M35 78 H65 V68 C65 58 57 54 57 46 C57 39 60 36 52 32 H48 C40 36 43 39 43 46 C43 54 35 58 35 68 Z'
-    });
-    const base = createSvgElement('path', { d: 'M28 86 H72 V94 H28 Z' });
-    group.append(head, collar, body, base);
-
-    const highlight = createSvgElement('path', {
-      d: 'M40 66 Q50 58 60 66',
-      fill: 'none',
-      stroke: accentColor,
-      'stroke-width': '3',
-      'stroke-linecap': 'round'
-    });
-    return [highlight];
-  },
-  r: ({ group, accentColor }) => {
-    const tower = createSvgElement('rect', { x: '32', y: '36', width: '36', height: '38', rx: '6' });
-    const parapet = createSvgElement('path', {
-      d: 'M28 36 H72 V24 H64 V18 H56 V24 H50 V18 H42 V24 H36 V18 H28 V24 H28 Z'
-    });
-    const midBand = createSvgElement('rect', { x: '32', y: '60', width: '36', height: '8', rx: '4' });
-    const base = createSvgElement('rect', { x: '26', y: '82', width: '48', height: '8', rx: '3' });
-    const footing = createSvgElement('rect', { x: '24', y: '90', width: '52', height: '6', rx: '3' });
-    group.append(parapet, tower, midBand, base, footing);
-
-    const slit = createSvgElement('line', {
-      x1: '50',
-      y1: '40',
-      x2: '50',
-      y2: '72',
-      stroke: accentColor,
-      'stroke-width': '3',
-      'stroke-linecap': 'round'
-    });
-    return [slit];
-  },
-  n: ({ group, accentColor }) => {
-    const body = createSvgElement('path', {
-      d: 'M70 80 H34 L40 66 C32 58 34 44 46 42 L40 28 L54 18 L68 22 L64 32 C74 40 74 56 66 64 L74 68 Z'
-    });
-    const base = createSvgElement('rect', { x: '26', y: '82', width: '48', height: '8', rx: '3' });
-    const footing = createSvgElement('rect', { x: '24', y: '90', width: '52', height: '6', rx: '3' });
-    group.append(body, base, footing);
-
-    const mane = createSvgElement('path', {
-      d: 'M52 24 C60 30 62 40 56 48',
-      fill: 'none',
-      stroke: accentColor,
-      'stroke-width': '3',
-      'stroke-linecap': 'round'
-    });
-    const eye = createSvgElement('circle', { cx: '58', cy: '36', r: '3.2', fill: accentColor, stroke: 'none' });
-    return [mane, eye];
-  },
-  b: ({ group, accentColor, shadowColor }) => {
-    const cap = createSvgElement('circle', { cx: '50', cy: '24', r: '11' });
-    const body = createSvgElement('path', {
-      d: 'M50 12 C38 12 32 28 42 38 L36 54 C32 64 38 72 44 78 V82 H56 V78 C62 72 68 64 64 54 L58 38 C68 28 62 12 50 12 Z'
-    });
-    const collar = createSvgElement('rect', { x: '36', y: '72', width: '28', height: '8', rx: '4' });
-    const base = createSvgElement('rect', { x: '26', y: '86', width: '48', height: '8', rx: '3' });
-    const footing = createSvgElement('rect', { x: '24', y: '92', width: '52', height: '6', rx: '3' });
-    group.append(cap, body, collar, base, footing);
-
-    const cut = createSvgElement('path', {
-      d: 'M50 22 C56 32 44 40 58 54',
-      fill: 'none',
-      stroke: accentColor,
-      'stroke-width': '3',
-      'stroke-linecap': 'round'
-    });
-    const shadow = createSvgElement('path', {
-      d: 'M42 74 Q50 68 58 74',
-      fill: 'none',
-      stroke: shadowColor,
-      'stroke-width': '3',
-      'stroke-linecap': 'round'
-    });
-    return [cut, shadow];
-  },
-  q: ({ group, accentColor }) => {
-    const skirt = createSvgElement('path', { d: 'M30 84 H70 L62 48 H38 Z' });
-    const bodice = createSvgElement('rect', { x: '38', y: '48', width: '24', height: '12', rx: '6' });
-    const torso = createSvgElement('path', { d: 'M44 48 C36 32 40 22 50 18 C60 22 64 32 56 48 Z' });
-    const collar = createSvgElement('rect', { x: '36', y: '72', width: '28', height: '8', rx: '4' });
-    const base = createSvgElement('rect', { x: '24', y: '88', width: '52', height: '8', rx: '4' });
-    const footing = createSvgElement('rect', { x: '22', y: '94', width: '56', height: '6', rx: '3' });
-    group.append(skirt, bodice, torso, collar, base, footing);
-
-    const crown = createSvgElement('polygon', {
-      points: '40,20 46,8 50,20 54,8 60,20 50,26',
-      fill: accentColor,
-      stroke: 'none',
-      opacity: '0.85'
-    });
-    const jewel = createSvgElement('circle', { cx: '46', cy: '12', r: '2.4', fill: '#ffd166', stroke: 'none' });
-    const jewelTwo = createSvgElement('circle', { cx: '54', cy: '12', r: '2.4', fill: '#ffd166', stroke: 'none' });
-    const tiara = createSvgElement('path', {
-      d: 'M40 20 Q50 28 60 20',
-      fill: 'none',
-      stroke: accentColor,
-      'stroke-width': '3',
-      'stroke-linecap': 'round'
-    });
-    return [crown, jewel, jewelTwo, tiara];
-  },
-  k: ({ group, accentColor }) => {
-    const skirt = createSvgElement('path', { d: 'M32 84 H68 L60 50 H40 Z' });
-    const bodice = createSvgElement('rect', { x: '40', y: '50', width: '20', height: '14', rx: '6' });
-    const torso = createSvgElement('path', { d: 'M44 50 C38 38 42 24 50 20 C58 24 62 38 56 50 Z' });
-    const collar = createSvgElement('rect', { x: '36', y: '72', width: '28', height: '8', rx: '4' });
-    const base = createSvgElement('rect', { x: '24', y: '88', width: '52', height: '8', rx: '4' });
-    const footing = createSvgElement('rect', { x: '22', y: '94', width: '56', height: '6', rx: '3' });
-    group.append(skirt, bodice, torso, collar, base, footing);
-
-    const crossVertical = createSvgElement('rect', { x: '47', y: '12', width: '6', height: '20', rx: '3' });
-    const crossHorizontal = createSvgElement('rect', { x: '42', y: '18', width: '16', height: '6', rx: '3' });
-    const crownBand = createSvgElement('rect', { x: '38', y: '32', width: '24', height: '6', rx: '3' });
-    crossVertical.setAttribute('fill', accentColor);
-    crossHorizontal.setAttribute('fill', accentColor);
-    crownBand.setAttribute('fill', accentColor);
-    return [crossVertical, crossHorizontal, crownBand];
-  }
+const pieceSymbols = {
+  p: { white: '♙', black: '♟' },
+  r: { white: '♖', black: '♜' },
+  n: { white: '♘', black: '♞' },
+  b: { white: '♗', black: '♝' },
+  q: { white: '♕', black: '♛' },
+  k: { white: '♔', black: '♚' }
 };
-
-function createPieceArt(pieceType, color) {
-  const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'piece-art', role: 'presentation', focusable: 'false' });
-  const gradientId = createGradient(svg, color);
-  const group = createSvgElement('g', {
-    fill: `url(#${gradientId})`,
-    stroke: color === 'white' ? 'rgba(40, 52, 82, 0.45)' : 'rgba(255, 255, 255, 0.35)',
-    'stroke-linejoin': 'round',
-    'stroke-linecap': 'round'
-  });
-
-  const accentColor = color === 'white' ? 'rgba(255, 255, 255, 0.78)' : 'rgba(255, 255, 255, 0.65)';
-  const shadowColor = color === 'white' ? 'rgba(60, 72, 104, 0.45)' : 'rgba(0, 0, 0, 0.55)';
-
-  const factory = pieceArtFactories[pieceType];
-  const overlays = factory ? factory({ group, color, accentColor, shadowColor }) : [];
-
-  svg.appendChild(group);
-  if (Array.isArray(overlays)) {
-    overlays.forEach((overlay) => {
-      if (overlay) {
-        if (!overlay.getAttribute('stroke') && overlay.tagName !== 'circle') {
-          overlay.setAttribute('stroke', 'none');
-        }
-        svg.appendChild(overlay);
-      }
-    });
-  }
-
-  return svg;
-}
 
 function renderLeaderboard() {
   if (!leaderboardList) return;
@@ -533,8 +333,13 @@ function createPieceElement(piece) {
   }
 
   element.classList.add(`piece-${pieceType}`);
-  const art = createPieceArt(pieceType, color);
-  element.appendChild(art);
+  const symbolMap = pieceSymbols[pieceType];
+  if (symbolMap && color) {
+    const span = document.createElement('span');
+    span.className = 'piece-symbol';
+    span.textContent = symbolMap[color];
+    element.appendChild(span);
+  }
   element.setAttribute('role', 'img');
   element.setAttribute('aria-label', describePiece(piece));
 
