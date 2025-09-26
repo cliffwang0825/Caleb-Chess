@@ -75,6 +75,8 @@ let menuAnimationToggle;
 let inGameAnimationToggle;
 let victoryBanner;
 let victoryMessage;
+let checkAlertElement;
+let checkAlertMessage;
 
 let gameState = null;
 
@@ -271,6 +273,7 @@ function showMenuScreen() {
     gameScreen.classList.add('hidden');
   }
   hideVictoryBanner();
+  hideCheckAlert();
 }
 
 function showGameScreen() {
@@ -776,7 +779,8 @@ function applyMove(state, move) {
       ...move,
       movingPiece,
       captured: capturePiece || null,
-      resultedInCheck: false
+      resultedInCheck: false,
+      checkColor: null
     },
     mode: state.mode,
     aiColor: state.aiColor,
@@ -833,6 +837,9 @@ function applyMove(state, move) {
 
   if (isKingInCheck(board, opponent)) {
     newState.lastMove.resultedInCheck = true;
+    newState.lastMove.checkColor = opponent;
+  } else {
+    newState.lastMove.checkColor = null;
   }
 
   newState.moveHistory.push({ move: newState.lastMove, piece: movingPiece, captured: capturePiece || null });
@@ -1117,6 +1124,60 @@ function hideVictoryBanner() {
   }
 }
 
+function showCheckAlert(color) {
+  if (!checkAlertElement || !checkAlertMessage) return;
+  let message;
+  if (color === 'white' || color === 'black') {
+    message = `Check! ${capitalize(color)} king is under attack.`;
+  } else if (color === 'both') {
+    message = 'Check! Both kings are under attack.';
+  } else {
+    message = 'Check!';
+  }
+  checkAlertMessage.textContent = message;
+  checkAlertElement.setAttribute('aria-hidden', 'false');
+  checkAlertElement.classList.remove('is-visible');
+  void checkAlertElement.offsetWidth;
+  checkAlertElement.classList.add('is-visible');
+}
+
+function hideCheckAlert() {
+  if (!checkAlertElement) return;
+  checkAlertElement.classList.remove('is-visible');
+  checkAlertElement.setAttribute('aria-hidden', 'true');
+  if (checkAlertMessage) {
+    checkAlertMessage.textContent = '';
+  }
+}
+
+function updateCheckAlert(state, whiteCheck, blackCheck) {
+  if (!checkAlertElement) return;
+  if (!state || state.gameOver) {
+    hideCheckAlert();
+    return;
+  }
+
+  const whiteInCheck = typeof whiteCheck === 'boolean' ? whiteCheck : isKingInCheck(state.board, 'white');
+  const blackInCheck = typeof blackCheck === 'boolean' ? blackCheck : isKingInCheck(state.board, 'black');
+
+  if (whiteInCheck && blackInCheck) {
+    showCheckAlert('both');
+    return;
+  }
+
+  if (whiteInCheck) {
+    showCheckAlert('white');
+    return;
+  }
+
+  if (blackInCheck) {
+    showCheckAlert('black');
+    return;
+  }
+
+  hideCheckAlert();
+}
+
 function updateStatus(state) {
   if (!state) return;
   const turnText = state.turn === 'white' ? 'White to move' : 'Black to move';
@@ -1132,12 +1193,25 @@ function updateStatus(state) {
     } else {
       hideVictoryBanner();
     }
+    hideCheckAlert();
     return;
   }
 
   hideVictoryBanner();
-  const inCheck = isKingInCheck(state.board, state.turn);
-  statusIndicator.textContent = inCheck ? 'Check!' : 'Game in progress';
+  const whiteInCheck = isKingInCheck(state.board, 'white');
+  const blackInCheck = isKingInCheck(state.board, 'black');
+
+  if (whiteInCheck && blackInCheck) {
+    statusIndicator.textContent = 'Check! Both kings are under attack.';
+  } else if (whiteInCheck) {
+    statusIndicator.textContent = 'Check! White king is under attack.';
+  } else if (blackInCheck) {
+    statusIndicator.textContent = 'Check! Black king is under attack.';
+  } else {
+    statusIndicator.textContent = 'Game in progress';
+  }
+
+  updateCheckAlert(state, whiteInCheck, blackInCheck);
 }
 
 function capitalize(value) {
@@ -1310,6 +1384,8 @@ function setupUI() {
   newGameButton = document.getElementById('new-game');
   victoryBanner = document.getElementById('victory-banner');
   victoryMessage = document.getElementById('victory-message');
+  checkAlertElement = document.getElementById('check-alert');
+  checkAlertMessage = document.getElementById('check-message');
 
   bindAudioUnlock();
 

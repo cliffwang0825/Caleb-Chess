@@ -11,7 +11,7 @@ A browser-based chess experience featuring full rule enforcement, two-player hot
 ## Features
 
 - **Legal move enforcement** – every piece adheres to chess rules, including castling, en passant, and promotion.
-- **Check and checkmate detection** – the game automatically announces check, checkmate, or stalemate.
+- **Check and checkmate detection** – floating alerts and status messaging call out check, checkmate, or stalemate the moment they happen.
 - **Two-player support** – pass-and-play with alternating turns (white moves first).
 - **Computer opponent** – battle an AI powered by a minimax search with four selectable depths: Easy, Normal, Hard, and Pro.
 - **Polished presentation** – premium board textures, sculpted 3D-inspired pieces, and smooth motion bring every turn to life.

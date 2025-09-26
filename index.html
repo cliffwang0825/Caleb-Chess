@@ -113,6 +113,15 @@
       </section>
       <section class="board-wrapper">
         <div id="chessboard" class="board" aria-label="Chess board" role="grid"></div>
+        <div
+          id="check-alert"
+          class="check-alert"
+          role="status"
+          aria-live="assertive"
+          aria-hidden="true"
+        >
+          <p id="check-message"></p>
+        </div>
         <div id="victory-banner" class="victory-banner hidden" role="status" aria-live="assertive">
           <p id="victory-message"></p>
         </div>
