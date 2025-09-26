@@ -51,44 +51,31 @@
           <div class="theme-grid" role="radiogroup" aria-label="Select board and piece theme">
             <label class="theme-option theme-option-wood">
               <input type="radio" name="menu-theme" value="wood" checked>
-              <span>
-                <strong>Walnut &amp; Ivory</strong>
-                <small>Classic carved warmth</small>
-              </span>
+              <span>Walnut &amp; Ivory</span>
             </label>
             <label class="theme-option theme-option-metal">
               <input type="radio" name="menu-theme" value="metal">
-              <span>
-                <strong>Forged Steel</strong>
-                <small>Polished metallic sheen</small>
-              </span>
+              <span>Forged Steel</span>
             </label>
             <label class="theme-option theme-option-glass">
               <input type="radio" name="menu-theme" value="glass">
-              <span>
-                <strong>Crystal Glass</strong>
-                <small>Translucent modern luxe</small>
-              </span>
+              <span>Crystal Glass</span>
             </label>
           </div>
         </div>
 
         <div class="menu-group sound-group">
           <span class="menu-control">Sound Effects</span>
-          <label class="toggle" for="sound-toggle">
-            <input type="checkbox" id="sound-toggle" checked>
-            <span class="toggle-slider" aria-hidden="true"></span>
-            <span class="toggle-label" id="menu-sound-status">Enabled</span>
-          </label>
+          <div class="menu-toggle-row">
+            <button type="button" id="sound-toggle" class="menu-toggle-button active" aria-pressed="true">Sound On</button>
+          </div>
         </div>
 
         <div class="menu-group fx-group">
           <span class="menu-control">Animation &amp; Special FX</span>
-          <label class="toggle" for="animation-toggle">
-            <input type="checkbox" id="animation-toggle" checked>
-            <span class="toggle-slider" aria-hidden="true"></span>
-            <span class="toggle-label" id="menu-animation-status">Enabled</span>
-          </label>
+          <div class="menu-toggle-row">
+            <button type="button" id="animation-toggle" class="menu-toggle-button active" aria-pressed="true">FX On</button>
+          </div>
         </div>
 
         <button id="play-button" type="button" class="play-button">Play</button>

@@ -67,9 +67,7 @@ let activeModeLabel;
 let activeDifficultyLabel;
 let activeThemeLabel;
 let sessionDifficultyWrapper;
-let menuSoundStatusLabel;
 let inGameSoundStatusLabel;
-let menuAnimationStatusLabel;
 let inGameAnimationStatusLabel;
 let menuThemeOptions;
 let inGameThemeSelect;
@@ -187,8 +185,10 @@ function applySettingsToGameUI() {
 }
 
 function updateSoundLabels() {
-  if (menuSoundStatusLabel) {
-    menuSoundStatusLabel.textContent = soundEnabled ? 'Enabled' : 'Muted';
+  if (menuSoundToggle) {
+    menuSoundToggle.textContent = soundEnabled ? 'Sound On' : 'Sound Off';
+    menuSoundToggle.setAttribute('aria-pressed', soundEnabled ? 'true' : 'false');
+    menuSoundToggle.classList.toggle('active', soundEnabled);
   }
   if (inGameSoundStatusLabel) {
     inGameSoundStatusLabel.textContent = soundEnabled ? 'Sound On' : 'Sound Off';
@@ -196,8 +196,10 @@ function updateSoundLabels() {
 }
 
 function updateAnimationLabels() {
-  if (menuAnimationStatusLabel) {
-    menuAnimationStatusLabel.textContent = animationsEnabled ? 'Enabled' : 'Disabled';
+  if (menuAnimationToggle) {
+    menuAnimationToggle.textContent = animationsEnabled ? 'FX On' : 'FX Off';
+    menuAnimationToggle.setAttribute('aria-pressed', animationsEnabled ? 'true' : 'false');
+    menuAnimationToggle.classList.toggle('active', animationsEnabled);
   }
   if (inGameAnimationStatusLabel) {
     inGameAnimationStatusLabel.textContent = animationsEnabled ? 'FX On' : 'FX Off';
@@ -206,9 +208,6 @@ function updateAnimationLabels() {
 
 function setSoundEnabled(enabled) {
   soundEnabled = !!enabled;
-  if (menuSoundToggle) {
-    menuSoundToggle.checked = soundEnabled;
-  }
   if (inGameSoundToggle) {
     inGameSoundToggle.checked = soundEnabled;
   }
@@ -220,9 +219,6 @@ function setSoundEnabled(enabled) {
 
 function setAnimationsEnabled(enabled) {
   animationsEnabled = !!enabled;
-  if (menuAnimationToggle) {
-    menuAnimationToggle.checked = animationsEnabled;
-  }
   if (inGameAnimationToggle) {
     inGameAnimationToggle.checked = animationsEnabled;
   }
@@ -1284,9 +1280,7 @@ function setupUI() {
   activeDifficultyLabel = document.getElementById('active-difficulty');
   activeThemeLabel = document.getElementById('active-theme');
   sessionDifficultyWrapper = document.querySelector('.session-difficulty');
-  menuSoundStatusLabel = document.getElementById('menu-sound-status');
   inGameSoundStatusLabel = document.getElementById('game-sound-status');
-  menuAnimationStatusLabel = document.getElementById('menu-animation-status');
   inGameAnimationStatusLabel = document.getElementById('game-animation-status');
   newGameButton = document.getElementById('new-game');
 
@@ -1318,14 +1312,14 @@ function setupUI() {
   }
 
   if (menuSoundToggle) {
-    menuSoundToggle.addEventListener('change', () => {
-      setSoundEnabled(menuSoundToggle.checked);
+    menuSoundToggle.addEventListener('click', () => {
+      setSoundEnabled(!soundEnabled);
     });
   }
 
   if (menuAnimationToggle) {
-    menuAnimationToggle.addEventListener('change', () => {
-      setAnimationsEnabled(menuAnimationToggle.checked);
+    menuAnimationToggle.addEventListener('click', () => {
+      setAnimationsEnabled(!animationsEnabled);
     });
   }
 
@@ -1352,15 +1346,13 @@ function setupUI() {
       const selectedMode = menuModeSelect ? menuModeSelect.value : pendingSettings.mode;
       const selectedDifficulty = getSelectedMenuDifficulty();
       const selectedTheme = getSelectedMenuTheme();
-      const menuSoundChoice = menuSoundToggle ? menuSoundToggle.checked : soundEnabled;
-      const menuAnimationChoice = menuAnimationToggle ? menuAnimationToggle.checked : animationsEnabled;
 
       pendingSettings.mode = selectedMode;
       pendingSettings.difficulty = selectedDifficulty;
       pendingSettings.theme = selectedTheme;
 
-      setSoundEnabled(menuSoundChoice);
-      setAnimationsEnabled(menuAnimationChoice);
+      setSoundEnabled(soundEnabled);
+      setAnimationsEnabled(animationsEnabled);
       applySettingsToGameUI();
       showGameScreen();
       startNewGame({ mode: selectedMode, difficulty: selectedDifficulty, theme: selectedTheme });
