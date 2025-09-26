@@ -46,12 +46,55 @@
           </div>
         </div>
 
+        <div class="menu-group theme-group">
+          <span class="menu-control">Board &amp; Pieces Theme</span>
+          <div class="theme-grid" role="radiogroup" aria-label="Select board and piece theme">
+            <label class="theme-option theme-option-wood">
+              <input type="radio" name="menu-theme" value="wood" checked>
+              <span>
+                <strong>Walnut &amp; Ivory</strong>
+                <small>Classic carved warmth</small>
+              </span>
+            </label>
+            <label class="theme-option theme-option-metal">
+              <input type="radio" name="menu-theme" value="metal">
+              <span>
+                <strong>Forged Steel</strong>
+                <small>Polished metallic sheen</small>
+              </span>
+            </label>
+            <label class="theme-option theme-option-glass">
+              <input type="radio" name="menu-theme" value="glass">
+              <span>
+                <strong>Crystal Glass</strong>
+                <small>Translucent modern luxe</small>
+              </span>
+            </label>
+            <label class="theme-option theme-option-scifi">
+              <input type="radio" name="menu-theme" value="scifi">
+              <span>
+                <strong>Cosmic Neon</strong>
+                <small>Sci-fi energy core</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
         <div class="menu-group sound-group">
           <span class="menu-control">Sound Effects</span>
           <label class="toggle" for="sound-toggle">
             <input type="checkbox" id="sound-toggle" checked>
             <span class="toggle-slider" aria-hidden="true"></span>
-            <span class="toggle-label">Enabled</span>
+            <span class="toggle-label" id="menu-sound-status">Enabled</span>
+          </label>
+        </div>
+
+        <div class="menu-group fx-group">
+          <span class="menu-control">Animation &amp; Special FX</span>
+          <label class="toggle" for="animation-toggle">
+            <input type="checkbox" id="animation-toggle" checked>
+            <span class="toggle-slider" aria-hidden="true"></span>
+            <span class="toggle-label" id="menu-animation-status">Enabled</span>
           </label>
         </div>
 
@@ -70,10 +113,27 @@
         <div class="session-settings">
           <p><strong>Mode:</strong> <span id="active-mode">Two Players (Local)</span></p>
           <p class="session-difficulty"><strong>Difficulty:</strong> <span id="active-difficulty">Normal</span></p>
-          <label class="inline-toggle">
+          <p class="session-theme"><strong>Theme:</strong> <span id="active-theme">Walnut &amp; Ivory</span></p>
+        </div>
+        <div class="session-controls">
+          <label class="inline-select" for="in-game-theme">
+            <span>Change Theme</span>
+            <select id="in-game-theme" aria-label="Change active board theme">
+              <option value="wood">Walnut &amp; Ivory</option>
+              <option value="metal">Forged Steel</option>
+              <option value="glass">Crystal Glass</option>
+              <option value="scifi">Cosmic Neon</option>
+            </select>
+          </label>
+          <label class="inline-toggle sound-toggle">
             <input type="checkbox" id="in-game-sound-toggle" checked>
             <span class="toggle-slider" aria-hidden="true"></span>
-            <span class="toggle-label">Sound</span>
+            <span class="toggle-label" id="game-sound-status">Sound</span>
+          </label>
+          <label class="inline-toggle fx-toggle">
+            <input type="checkbox" id="in-game-animation-toggle" checked>
+            <span class="toggle-slider" aria-hidden="true"></span>
+            <span class="toggle-label" id="game-animation-status">FX</span>
           </label>
         </div>
         <button id="new-game" type="button">Restart</button>

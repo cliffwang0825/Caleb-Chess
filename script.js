@@ -51,6 +51,13 @@ const pieceTypeNames = {
   p: 'pawn'
 };
 
+const boardThemes = {
+  wood: { label: 'Walnut & Ivory' },
+  metal: { label: 'Forged Steel' },
+  glass: { label: 'Crystal Glass' },
+  scifi: { label: 'Cosmic Neon' }
+};
+
 let boardElement;
 let squareElements = [];
 let turnIndicator;
@@ -67,17 +74,27 @@ let playButton;
 let backToMenuButton;
 let activeModeLabel;
 let activeDifficultyLabel;
+let activeThemeLabel;
 let sessionDifficultyWrapper;
 let leaderboardList;
 let menuSoundStatusLabel;
 let inGameSoundStatusLabel;
+let menuAnimationStatusLabel;
+let inGameAnimationStatusLabel;
+let menuThemeOptions;
+let inGameThemeSelect;
+let menuAnimationToggle;
+let inGameAnimationToggle;
 
 let gameState = null;
 
 let soundEnabled = true;
+let animationsEnabled = true;
+let currentTheme = null;
 let pendingSettings = {
   mode: 'human',
-  difficulty: 'normal'
+  difficulty: 'normal',
+  theme: 'wood'
 };
 
 let audioContext = null;
@@ -110,6 +127,14 @@ function getSelectedMenuDifficulty() {
   return selected ? selected.value : pendingSettings.difficulty;
 }
 
+function getSelectedMenuTheme() {
+  if (!menuThemeOptions || menuThemeOptions.length === 0) {
+    return pendingSettings.theme;
+  }
+  const selected = Array.from(menuThemeOptions).find((input) => input.checked);
+  return selected ? selected.value : pendingSettings.theme;
+}
+
 function setMenuDifficulty(value) {
   if (!menuDifficultyOptions || menuDifficultyOptions.length === 0) return;
   let found = false;
@@ -123,6 +148,26 @@ function setMenuDifficulty(value) {
   if (!found) {
     menuDifficultyOptions[0].checked = true;
   }
+}
+
+function setMenuThemeSelection(value) {
+  if (!menuThemeOptions || menuThemeOptions.length === 0) return;
+  let found = false;
+  menuThemeOptions.forEach((input) => {
+    const match = input.value === value;
+    input.checked = match;
+    if (match) {
+      found = true;
+    }
+  });
+  if (!found) {
+    menuThemeOptions[0].checked = true;
+  }
+}
+
+function getThemeLabel(themeKey) {
+  const theme = boardThemes[themeKey] || boardThemes.wood;
+  return theme ? theme.label : '';
 }
 
 function updateDifficultyVisibility() {
@@ -145,11 +190,18 @@ function applySettingsToGameUI() {
     menuModeSelect.value = pendingSettings.mode;
   }
   setMenuDifficulty(pendingSettings.difficulty);
+  setMenuThemeSelection(pendingSettings.theme);
   if (activeModeLabel) {
     activeModeLabel.textContent = modeLabels[pendingSettings.mode] || modeLabels.human;
   }
   if (activeDifficultyLabel) {
     activeDifficultyLabel.textContent = formatDifficultyLabel(pendingSettings.difficulty);
+  }
+  if (activeThemeLabel) {
+    activeThemeLabel.textContent = getThemeLabel(pendingSettings.theme);
+  }
+  if (inGameThemeSelect) {
+    inGameThemeSelect.value = pendingSettings.theme;
   }
   updateDifficultyVisibility();
 }
@@ -160,6 +212,15 @@ function updateSoundLabels() {
   }
   if (inGameSoundStatusLabel) {
     inGameSoundStatusLabel.textContent = soundEnabled ? 'Sound On' : 'Sound Off';
+  }
+}
+
+function updateAnimationLabels() {
+  if (menuAnimationStatusLabel) {
+    menuAnimationStatusLabel.textContent = animationsEnabled ? 'Enabled' : 'Disabled';
+  }
+  if (inGameAnimationStatusLabel) {
+    inGameAnimationStatusLabel.textContent = animationsEnabled ? 'FX On' : 'FX Off';
   }
 }
 
@@ -174,6 +235,53 @@ function setSoundEnabled(enabled) {
   updateSoundLabels();
   if (soundEnabled) {
     bindAudioUnlock();
+  }
+}
+
+function setAnimationsEnabled(enabled) {
+  animationsEnabled = !!enabled;
+  if (menuAnimationToggle) {
+    menuAnimationToggle.checked = animationsEnabled;
+  }
+  if (inGameAnimationToggle) {
+    inGameAnimationToggle.checked = animationsEnabled;
+  }
+  updateAnimationLabels();
+  if (!animationsEnabled && squareElements.length) {
+    squareElements.forEach((square) => square.classList.remove('capture-flash'));
+  }
+  if (!animationsEnabled && boardElement) {
+    boardElement.classList.remove('board-shake');
+    boardElement.querySelectorAll('.move-ghost').forEach((ghost) => ghost.remove());
+  }
+}
+
+function applyThemeToDocument(themeKey) {
+  const key = boardThemes[themeKey] ? themeKey : 'wood';
+  if (currentTheme !== key) {
+    const body = document.body;
+    if (body) {
+      Object.keys(boardThemes).forEach((theme) => body.classList.remove(`theme-${theme}`));
+      body.classList.add(`theme-${key}`);
+    }
+    currentTheme = key;
+  }
+  if (boardElement) {
+    boardElement.dataset.theme = key;
+  }
+  return key;
+}
+
+function setThemePreference(themeKey, options = {}) {
+  const normalized = boardThemes[themeKey] ? themeKey : 'wood';
+  pendingSettings.theme = normalized;
+  applyThemeToDocument(normalized);
+  if (options.updateUI !== false) {
+    applySettingsToGameUI();
+  }
+  if (options.applyToGame !== false && gameState) {
+    gameState.theme = normalized;
+    renderBoard(gameState);
   }
 }
 
@@ -263,7 +371,7 @@ function cloneBoard(board) {
 }
 
 function createInitialState(options = {}) {
-  const { mode = 'human', difficulty = 'normal' } = options;
+  const { mode = 'human', difficulty = 'normal', theme = pendingSettings.theme || 'wood' } = options;
   const aiColor = mode === 'ai-white' ? 'black' : mode === 'ai-black' ? 'white' : null;
 
   return {
@@ -281,6 +389,7 @@ function createInitialState(options = {}) {
     mode,
     aiColor,
     difficulty,
+    theme,
     gameOver: false,
     winner: null
   };
@@ -693,6 +802,7 @@ function applyMove(state, move) {
     mode: state.mode,
     aiColor: state.aiColor,
     difficulty: state.difficulty,
+    theme: state.theme,
     gameOver: state.gameOver,
     winner: state.winner
   };
@@ -909,6 +1019,9 @@ function pickAIMove(state) {
 }
 
 function renderBoard(state) {
+  if (!state || !boardElement) return;
+  const themeKey = state.theme || pendingSettings.theme || currentTheme || 'wood';
+  applyThemeToDocument(themeKey);
   const whiteKingInCheck = isKingInCheck(state.board, 'white');
   const blackKingInCheck = isKingInCheck(state.board, 'black');
   const lastMove = state.lastMove;
@@ -918,11 +1031,11 @@ function renderBoard(state) {
       const square = getSquareElement(row, col);
       const piece = state.board[row][col];
       square.innerHTML = '';
-      square.classList.remove('selected', 'legal-move', 'check', 'last-from', 'last-to');
+      square.classList.remove('selected', 'legal-move', 'check', 'last-from', 'last-to', 'capture-flash');
 
       if (piece) {
         const pieceElement = createPieceElement(piece);
-        if (lastMove && lastMove.to && lastMove.to.row === row && lastMove.to.col === col) {
+        if (animationsEnabled && lastMove && lastMove.to && lastMove.to.row === row && lastMove.to.col === col) {
           pieceElement.classList.add('piece-enter');
         }
         square.appendChild(pieceElement);
@@ -1049,8 +1162,71 @@ function evaluateEndConditions() {
   }
 }
 
+function triggerMoveAnimations(state) {
+  if (!animationsEnabled || !state || !state.lastMove || !boardElement) return;
+  const { from, to, movingPiece, promotion, captured } = state.lastMove;
+  if (!from || !to) return;
+  const fromSquare = getSquareElement(from.row, from.col);
+  const toSquare = getSquareElement(to.row, to.col);
+  if (!fromSquare || !toSquare) return;
+  const boardRect = boardElement.getBoundingClientRect();
+  const fromRect = fromSquare.getBoundingClientRect();
+  const toRect = toSquare.getBoundingClientRect();
+  if (!fromRect.width || !toRect.width) return;
+
+  const ghostContainer = document.createElement('div');
+  ghostContainer.className = 'move-ghost';
+
+  const boardPiece = state.board[to.row][to.col];
+  const pieceForGhost = boardPiece || promotion || movingPiece;
+  const ghostPiece = createPieceElement(pieceForGhost);
+  ghostPiece.classList.remove('piece-enter');
+  ghostPiece.setAttribute('aria-hidden', 'true');
+  ghostContainer.appendChild(ghostPiece);
+
+  const squareWidth = fromRect.width;
+  const squareHeight = fromRect.height;
+  ghostContainer.style.width = `${squareWidth}px`;
+  ghostContainer.style.height = `${squareHeight}px`;
+
+  const startX = fromRect.left - boardRect.left;
+  const startY = fromRect.top - boardRect.top;
+  const endX = toRect.left - boardRect.left;
+  const endY = toRect.top - boardRect.top;
+
+  ghostContainer.style.transform = `translate3d(${startX}px, ${startY}px, 0)`;
+  boardElement.appendChild(ghostContainer);
+
+  requestAnimationFrame(() => {
+    ghostContainer.style.transform = `translate3d(${endX}px, ${endY}px, 0)`;
+  });
+
+  const finalize = () => {
+    ghostContainer.classList.add('fade-out');
+    ghostContainer.addEventListener(
+      'transitionend',
+      () => {
+        ghostContainer.remove();
+      },
+      { once: true }
+    );
+  };
+
+  ghostContainer.addEventListener('transitionend', finalize, { once: true });
+
+  if (captured) {
+    toSquare.classList.add('capture-flash');
+    boardElement.classList.add('board-shake');
+    setTimeout(() => {
+      toSquare.classList.remove('capture-flash');
+      boardElement.classList.remove('board-shake');
+    }, 280);
+  }
+}
+
 function triggerMoveEffects(state) {
   if (!state.lastMove) return;
+  triggerMoveAnimations(state);
   const { captured, resultedInCheck } = state.lastMove;
   if (resultedInCheck) {
     playSoundCue('check');
@@ -1094,9 +1270,13 @@ function maybeTriggerAI() {
 function startNewGame(options = {}) {
   const mode = options.mode || pendingSettings.mode;
   const difficulty = options.difficulty || pendingSettings.difficulty;
-  pendingSettings = { mode, difficulty };
+  const theme = options.theme || pendingSettings.theme;
+  pendingSettings.mode = mode;
+  pendingSettings.difficulty = difficulty;
+  pendingSettings.theme = theme;
   applySettingsToGameUI();
-  gameState = createInitialState({ mode, difficulty });
+  applyThemeToDocument(theme);
+  gameState = createInitialState({ mode, difficulty, theme });
   clearSelection();
   renderBoard(gameState);
   updateStatus(gameState);
@@ -1112,16 +1292,23 @@ function setupUI() {
   menuModeSelect = document.getElementById('menu-mode');
   menuDifficultyOptions = document.querySelectorAll('input[name="menu-difficulty"]');
   menuDifficultyGroup = document.getElementById('difficulty-menu-group');
+  menuThemeOptions = document.querySelectorAll('input[name="menu-theme"]');
   menuSoundToggle = document.getElementById('sound-toggle');
+  menuAnimationToggle = document.getElementById('animation-toggle');
   inGameSoundToggle = document.getElementById('in-game-sound-toggle');
+  inGameAnimationToggle = document.getElementById('in-game-animation-toggle');
+  inGameThemeSelect = document.getElementById('in-game-theme');
   playButton = document.getElementById('play-button');
   backToMenuButton = document.getElementById('back-to-menu');
   activeModeLabel = document.getElementById('active-mode');
   activeDifficultyLabel = document.getElementById('active-difficulty');
+  activeThemeLabel = document.getElementById('active-theme');
   sessionDifficultyWrapper = document.querySelector('.session-difficulty');
   leaderboardList = document.getElementById('leaderboard-list');
-  menuSoundStatusLabel = document.querySelector('#menu-screen .sound-group .toggle-label');
-  inGameSoundStatusLabel = document.querySelector('#game-screen .inline-toggle .toggle-label');
+  menuSoundStatusLabel = document.getElementById('menu-sound-status');
+  inGameSoundStatusLabel = document.getElementById('game-sound-status');
+  menuAnimationStatusLabel = document.getElementById('menu-animation-status');
+  inGameAnimationStatusLabel = document.getElementById('game-animation-status');
   newGameButton = document.getElementById('new-game');
 
   bindAudioUnlock();
@@ -1143,9 +1330,23 @@ function setupUI() {
     });
   }
 
+  if (menuThemeOptions) {
+    menuThemeOptions.forEach((input) => {
+      input.addEventListener('change', () => {
+        setThemePreference(input.value);
+      });
+    });
+  }
+
   if (menuSoundToggle) {
     menuSoundToggle.addEventListener('change', () => {
       setSoundEnabled(menuSoundToggle.checked);
+    });
+  }
+
+  if (menuAnimationToggle) {
+    menuAnimationToggle.addEventListener('change', () => {
+      setAnimationsEnabled(menuAnimationToggle.checked);
     });
   }
 
@@ -1155,14 +1356,35 @@ function setupUI() {
     });
   }
 
+  if (inGameAnimationToggle) {
+    inGameAnimationToggle.addEventListener('change', () => {
+      setAnimationsEnabled(inGameAnimationToggle.checked);
+    });
+  }
+
+  if (inGameThemeSelect) {
+    inGameThemeSelect.addEventListener('change', () => {
+      setThemePreference(inGameThemeSelect.value);
+    });
+  }
+
   if (playButton) {
     playButton.addEventListener('click', () => {
-      pendingSettings.mode = menuModeSelect ? menuModeSelect.value : pendingSettings.mode;
-      pendingSettings.difficulty = getSelectedMenuDifficulty();
-      setSoundEnabled(menuSoundToggle ? menuSoundToggle.checked : soundEnabled);
+      const selectedMode = menuModeSelect ? menuModeSelect.value : pendingSettings.mode;
+      const selectedDifficulty = getSelectedMenuDifficulty();
+      const selectedTheme = getSelectedMenuTheme();
+      const menuSoundChoice = menuSoundToggle ? menuSoundToggle.checked : soundEnabled;
+      const menuAnimationChoice = menuAnimationToggle ? menuAnimationToggle.checked : animationsEnabled;
+
+      pendingSettings.mode = selectedMode;
+      pendingSettings.difficulty = selectedDifficulty;
+      pendingSettings.theme = selectedTheme;
+
+      setSoundEnabled(menuSoundChoice);
+      setAnimationsEnabled(menuAnimationChoice);
       applySettingsToGameUI();
       showGameScreen();
-      startNewGame();
+      startNewGame({ mode: selectedMode, difficulty: selectedDifficulty, theme: selectedTheme });
     });
   }
 
@@ -1182,16 +1404,19 @@ function setupUI() {
 
   pendingSettings.mode = menuModeSelect ? menuModeSelect.value : pendingSettings.mode;
   pendingSettings.difficulty = getSelectedMenuDifficulty();
+  pendingSettings.theme = getSelectedMenuTheme();
 }
 
 function init() {
   setupUI();
+  applyThemeToDocument(pendingSettings.theme);
   buildBoard();
   renderLeaderboard();
   setMenuDifficulty(pendingSettings.difficulty);
   updateDifficultyVisibility();
   applySettingsToGameUI();
   setSoundEnabled(soundEnabled);
+  setAnimationsEnabled(animationsEnabled);
   showMenuScreen();
 }
 
