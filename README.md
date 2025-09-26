@@ -14,6 +14,9 @@ A browser-based chess experience featuring full rule enforcement, two-player hot
 - **Check and checkmate detection** – the game automatically announces check, checkmate, or stalemate.
 - **Two-player support** – pass-and-play with alternating turns (white moves first).
 - **Computer opponent** – battle an AI powered by a minimax search with four selectable depths: Easy, Normal, Hard, and Pro.
+- **Polished presentation** – premium wood-and-metal board styling, 3D-styled pieces, and smooth movement animation keep the action cinematic.
+- **Immersive feedback** – unique sound cues accompany moves, captures, and check events.
+- **Responsive layout** – controls and the board adapt fluidly from desktops to phones and tablets.
 - **Accessible controls** – keyboard and mouse friendly square selection with visual move hints.
 
 Press **New Game** at any time to restart with the current mode and difficulty. When playing against the computer you can choose to control either white or black pieces.

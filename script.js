@@ -47,6 +47,71 @@ let newGameButton;
 
 let gameState = null;
 
+let audioContext = null;
+let audioUnlockBound = false;
+
+const SOUND_PROFILES = {
+  move: { frequency: 620, duration: 0.22, type: 'triangle', gain: 0.25 },
+  capture: { frequency: 460, duration: 0.28, type: 'sawtooth', gain: 0.28 },
+  check: { frequency: 920, duration: 0.34, type: 'square', gain: 0.3 }
+};
+
+function ensureAudioContext() {
+  const Ctor = window.AudioContext || window.webkitAudioContext;
+  if (!Ctor) return null;
+  if (!audioContext) {
+    audioContext = new Ctor();
+  }
+  return audioContext;
+}
+
+function unlockAudioContext() {
+  const ctx = ensureAudioContext();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+}
+
+function bindAudioUnlock() {
+  if (audioUnlockBound) return;
+  audioUnlockBound = true;
+  const handler = () => {
+    unlockAudioContext();
+    window.removeEventListener('pointerdown', handler);
+    window.removeEventListener('keydown', handler);
+  };
+  window.addEventListener('pointerdown', handler);
+  window.addEventListener('keydown', handler);
+}
+
+function playSoundCue(kind) {
+  const profile = SOUND_PROFILES[kind];
+  if (!profile) return;
+  const ctx = ensureAudioContext();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+
+  const now = ctx.currentTime;
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  oscillator.type = profile.type;
+  oscillator.frequency.setValueAtTime(profile.frequency, now);
+
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(profile.gain, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + profile.duration);
+
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+
+  oscillator.start(now);
+  oscillator.stop(now + profile.duration + 0.05);
+}
+
 function cloneBoard(board) {
   return board.map((row) => row.slice());
 }
@@ -123,7 +188,10 @@ function createPieceElement(piece) {
   }
 
   element.classList.add(`piece-${pieceType}`);
-  element.textContent = label;
+  const face = document.createElement('span');
+  face.classList.add('piece-face');
+  face.textContent = label;
+  element.appendChild(face);
   element.setAttribute('aria-hidden', 'true');
 
   return element;
@@ -451,6 +519,10 @@ function applyMove(state, move) {
   const movingPiece = board[move.from.row][move.from.col];
   const movingColor = getPieceColor(movingPiece);
   const opponent = movingColor === 'white' ? 'black' : 'white';
+  const capturePiece =
+    move.type === 'enPassant' && move.capture
+      ? state.board[move.capture.row][move.capture.col]
+      : state.board[move.to.row][move.to.col];
 
   const newState = {
     board,
@@ -463,7 +535,12 @@ function applyMove(state, move) {
     moveHistory: state.moveHistory.slice(),
     selected: null,
     legalMoves: [],
-    lastMove: move,
+    lastMove: {
+      ...move,
+      movingPiece,
+      captured: capturePiece || null,
+      resultedInCheck: false
+    },
     mode: state.mode,
     aiColor: state.aiColor,
     difficulty: state.difficulty,
@@ -500,9 +577,8 @@ function applyMove(state, move) {
     }
   }
 
-  const capturedPiece = state.board[move.to.row][move.to.col];
-  if (capturedPiece) {
-    if (capturedPiece.toLowerCase() === 'r') {
+  if (capturePiece) {
+    if (capturePiece.toLowerCase() === 'r') {
       if (opponent === 'white') {
         if (move.to.row === 7 && move.to.col === 0) newState.castlingRights.white.queen = false;
         if (move.to.row === 7 && move.to.col === 7) newState.castlingRights.white.king = false;
@@ -517,7 +593,11 @@ function applyMove(state, move) {
     newState.enPassant = move.enPassantTarget;
   }
 
-  newState.moveHistory.push({ move, piece: movingPiece });
+  if (isKingInCheck(board, opponent)) {
+    newState.lastMove.resultedInCheck = true;
+  }
+
+  newState.moveHistory.push({ move: newState.lastMove, piece: movingPiece, captured: capturePiece || null });
 
   return newState;
 }
@@ -682,16 +762,20 @@ function pickAIMove(state) {
 function renderBoard(state) {
   const whiteKingInCheck = isKingInCheck(state.board, 'white');
   const blackKingInCheck = isKingInCheck(state.board, 'black');
+  const lastMove = state.lastMove;
 
   for (let row = 0; row < 8; row++) {
     for (let col = 0; col < 8; col++) {
       const square = getSquareElement(row, col);
       const piece = state.board[row][col];
       square.innerHTML = '';
-      square.classList.remove('selected', 'legal-move', 'check');
+      square.classList.remove('selected', 'legal-move', 'check', 'last-from', 'last-to');
 
       if (piece) {
         const pieceElement = createPieceElement(piece);
+        if (lastMove && lastMove.to && lastMove.to.row === row && lastMove.to.col === col) {
+          pieceElement.classList.add('piece-enter');
+        }
         square.appendChild(pieceElement);
         square.setAttribute('aria-label', `Square ${toCoordinate(row, col)} with ${describePiece(piece)}`);
       } else {
@@ -705,6 +789,18 @@ function renderBoard(state) {
       if (state.legalMoves.some((move) => move.to.row === row && move.to.col === col)) {
         square.classList.add('legal-move');
       }
+    }
+  }
+
+  if (lastMove) {
+    const { from, to } = lastMove;
+    if (from) {
+      const fromSquare = getSquareElement(from.row, from.col);
+      fromSquare.classList.add('last-from');
+    }
+    if (to) {
+      const toSquare = getSquareElement(to.row, to.col);
+      toSquare.classList.add('last-to');
     }
   }
 
@@ -808,11 +904,24 @@ function evaluateEndConditions() {
   }
 }
 
+function triggerMoveEffects(state) {
+  if (!state.lastMove) return;
+  const { captured, resultedInCheck } = state.lastMove;
+  if (resultedInCheck) {
+    playSoundCue('check');
+  } else if (captured) {
+    playSoundCue('capture');
+  } else {
+    playSoundCue('move');
+  }
+}
+
 function afterMoveUpdate() {
   clearSelection();
   evaluateEndConditions();
   renderBoard(gameState);
   updateStatus(gameState);
+  triggerMoveEffects(gameState);
   maybeTriggerAI();
 }
 
@@ -852,6 +961,8 @@ function setupUI() {
   modeSelect = document.getElementById('mode-select');
   difficultySelect = document.getElementById('difficulty-select');
   newGameButton = document.getElementById('new-game');
+
+  bindAudioUnlock();
 
   modeSelect.addEventListener('change', () => {
     gameState.mode = modeSelect.value;
