@@ -9,30 +9,83 @@
 <body>
   <main class="page">
     <h1 class="title">Caleb Chess</h1>
-    <section class="controls" aria-label="Game controls">
-      <label class="control">Mode
-        <select id="mode-select" aria-label="Select game mode">
-          <option value="human">Human vs Human</option>
-          <option value="ai-white">Play vs Computer (You are White)</option>
-          <option value="ai-black">Play vs Computer (You are Black)</option>
-        </select>
-      </label>
-      <label class="control">Difficulty
-        <select id="difficulty-select" aria-label="Select AI difficulty">
-          <option value="easy">Easy</option>
-          <option value="normal" selected>Normal</option>
-          <option value="hard">Hard</option>
-          <option value="pro">Pro</option>
-        </select>
-      </label>
-      <button id="new-game" type="button">New Game</button>
+
+    <section id="menu-screen" class="menu-screen" aria-label="Main menu">
+      <div class="menu-panel">
+        <h2 class="menu-title">Main Menu</h2>
+        <p class="menu-tagline">Choose how you want to play before stepping onto the board.</p>
+
+        <div class="menu-group">
+          <label class="menu-control" for="menu-mode">Battle Mode</label>
+          <select id="menu-mode" aria-label="Select battle mode">
+            <option value="human">Two Players (Local)</option>
+            <option value="ai-white">Single Player — You Play White</option>
+            <option value="ai-black">Single Player — You Play Black</option>
+          </select>
+        </div>
+
+        <div class="menu-group" id="difficulty-menu-group">
+          <span class="menu-control" id="difficulty-label">Difficulty</span>
+          <div class="difficulty-grid" role="radiogroup" aria-labelledby="difficulty-label">
+            <label class="difficulty-option">
+              <input type="radio" name="menu-difficulty" value="easy">
+              <span>Easy</span>
+            </label>
+            <label class="difficulty-option">
+              <input type="radio" name="menu-difficulty" value="normal" checked>
+              <span>Normal</span>
+            </label>
+            <label class="difficulty-option">
+              <input type="radio" name="menu-difficulty" value="hard">
+              <span>Hard</span>
+            </label>
+            <label class="difficulty-option">
+              <input type="radio" name="menu-difficulty" value="pro">
+              <span>Pro</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="menu-group sound-group">
+          <span class="menu-control">Sound Effects</span>
+          <label class="toggle" for="sound-toggle">
+            <input type="checkbox" id="sound-toggle" checked>
+            <span class="toggle-slider" aria-hidden="true"></span>
+            <span class="toggle-label">Enabled</span>
+          </label>
+        </div>
+
+        <section class="leaderboard" aria-label="Leaderboard">
+          <h3>Leaderboard</h3>
+          <ol id="leaderboard-list"></ol>
+        </section>
+
+        <button id="play-button" type="button" class="play-button">Play</button>
+      </div>
     </section>
-    <section class="status" aria-live="polite">
-      <p id="turn-indicator">White to move</p>
-      <p id="game-status">Game in progress</p>
-    </section>
-    <section class="board-wrapper">
-      <div id="chessboard" class="board" aria-label="Chess board" role="grid"></div>
+
+    <section id="game-screen" class="game-screen hidden" aria-label="Chess game">
+      <div class="game-topbar">
+        <button id="back-to-menu" type="button" class="ghost-button">Main Menu</button>
+        <div class="session-settings">
+          <p><strong>Mode:</strong> <span id="active-mode">Two Players (Local)</span></p>
+          <p class="session-difficulty"><strong>Difficulty:</strong> <span id="active-difficulty">Normal</span></p>
+          <label class="inline-toggle">
+            <input type="checkbox" id="in-game-sound-toggle" checked>
+            <span class="toggle-slider" aria-hidden="true"></span>
+            <span class="toggle-label">Sound</span>
+          </label>
+        </div>
+        <button id="new-game" type="button">Restart</button>
+      </div>
+
+      <section class="status" aria-live="polite">
+        <p id="turn-indicator">White to move</p>
+        <p id="game-status">Select Play from the menu to begin.</p>
+      </section>
+      <section class="board-wrapper">
+        <div id="chessboard" class="board" aria-label="Chess board" role="grid"></div>
+      </section>
     </section>
   </main>
   <script src="script.js"></script>

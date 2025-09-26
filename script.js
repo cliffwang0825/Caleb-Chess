@@ -12,15 +12,6 @@ const initialBoard = [
   ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
 ];
 
-const pieceLabels = {
-  k: 'K',
-  q: 'Q',
-  r: 'R',
-  b: 'B',
-  n: 'N',
-  p: 'P'
-};
-
 const pieceValues = {
   p: 100,
   n: 320,
@@ -37,18 +28,372 @@ const difficultyDepth = {
   pro: 4
 };
 
+const leaderboardData = [
+  { name: 'Caleb', rating: 2480 },
+  { name: 'Ivy', rating: 2365 },
+  { name: 'Noah', rating: 2290 },
+  { name: 'Mira', rating: 2215 },
+  { name: 'Aris', rating: 2140 }
+];
+
+const modeLabels = {
+  human: 'Two Players (Local)',
+  'ai-white': 'Single Player — You Play White',
+  'ai-black': 'Single Player — You Play Black'
+};
+
+const pieceTypeNames = {
+  k: 'king',
+  q: 'queen',
+  r: 'rook',
+  b: 'bishop',
+  n: 'knight',
+  p: 'pawn'
+};
+
 let boardElement;
 let squareElements = [];
 let turnIndicator;
 let statusIndicator;
-let modeSelect;
-let difficultySelect;
 let newGameButton;
+let menuScreen;
+let gameScreen;
+let menuModeSelect;
+let menuDifficultyOptions;
+let menuDifficultyGroup;
+let menuSoundToggle;
+let inGameSoundToggle;
+let playButton;
+let backToMenuButton;
+let activeModeLabel;
+let activeDifficultyLabel;
+let sessionDifficultyWrapper;
+let leaderboardList;
+let menuSoundStatusLabel;
+let inGameSoundStatusLabel;
 
 let gameState = null;
 
+let soundEnabled = true;
+let pendingSettings = {
+  mode: 'human',
+  difficulty: 'normal'
+};
+
 let audioContext = null;
 let audioUnlockBound = false;
+
+const svgNS = 'http://www.w3.org/2000/svg';
+let gradientCounter = 0;
+
+function createSvgElement(tag, attributes = {}) {
+  const element = document.createElementNS(svgNS, tag);
+  Object.entries(attributes).forEach(([key, value]) => {
+    element.setAttribute(key, value);
+  });
+  return element;
+}
+
+function createGradient(svg, color) {
+  const gradientId = `piece-gradient-${color}-${gradientCounter++}`;
+  const defs = createSvgElement('defs');
+  const gradient = createSvgElement('linearGradient', {
+    id: gradientId,
+    x1: '0%',
+    y1: '0%',
+    x2: '0%',
+    y2: '100%'
+  });
+
+  const stops = color === 'white'
+    ? [
+        { offset: '0%', color: '#ffffff', opacity: '1' },
+        { offset: '55%', color: '#dde4f5', opacity: '1' },
+        { offset: '100%', color: '#b6c0d6', opacity: '1' }
+      ]
+    : [
+        { offset: '0%', color: '#6f7b92', opacity: '1' },
+        { offset: '55%', color: '#232a38', opacity: '1' },
+        { offset: '100%', color: '#090d15', opacity: '1' }
+      ];
+
+  stops.forEach((stop) => {
+    gradient.appendChild(
+      createSvgElement('stop', {
+        offset: stop.offset,
+        'stop-color': stop.color,
+        'stop-opacity': stop.opacity
+      })
+    );
+  });
+
+  defs.appendChild(gradient);
+  svg.appendChild(defs);
+  return gradientId;
+}
+
+const pieceArtFactories = {
+  p: ({ group, accentColor }) => {
+    const head = createSvgElement('circle', { cx: '50', cy: '26', r: '12' });
+    const collar = createSvgElement('rect', { x: '40', y: '38', width: '20', height: '6', rx: '3' });
+    const body = createSvgElement('path', {
+      d: 'M35 78 H65 V68 C65 58 57 54 57 46 C57 39 60 36 52 32 H48 C40 36 43 39 43 46 C43 54 35 58 35 68 Z'
+    });
+    const base = createSvgElement('path', { d: 'M28 86 H72 V94 H28 Z' });
+    group.append(head, collar, body, base);
+
+    const highlight = createSvgElement('path', {
+      d: 'M40 66 Q50 58 60 66',
+      fill: 'none',
+      stroke: accentColor,
+      'stroke-width': '3',
+      'stroke-linecap': 'round'
+    });
+    return [highlight];
+  },
+  r: ({ group, accentColor }) => {
+    const tower = createSvgElement('rect', { x: '32', y: '36', width: '36', height: '38', rx: '6' });
+    const parapet = createSvgElement('path', {
+      d: 'M28 36 H72 V24 H64 V18 H56 V24 H50 V18 H42 V24 H36 V18 H28 V24 H28 Z'
+    });
+    const midBand = createSvgElement('rect', { x: '32', y: '60', width: '36', height: '8', rx: '4' });
+    const base = createSvgElement('rect', { x: '26', y: '82', width: '48', height: '8', rx: '3' });
+    const footing = createSvgElement('rect', { x: '24', y: '90', width: '52', height: '6', rx: '3' });
+    group.append(parapet, tower, midBand, base, footing);
+
+    const slit = createSvgElement('line', {
+      x1: '50',
+      y1: '40',
+      x2: '50',
+      y2: '72',
+      stroke: accentColor,
+      'stroke-width': '3',
+      'stroke-linecap': 'round'
+    });
+    return [slit];
+  },
+  n: ({ group, accentColor }) => {
+    const body = createSvgElement('path', {
+      d: 'M70 80 H34 L40 66 C32 58 34 44 46 42 L40 28 L54 18 L68 22 L64 32 C74 40 74 56 66 64 L74 68 Z'
+    });
+    const base = createSvgElement('rect', { x: '26', y: '82', width: '48', height: '8', rx: '3' });
+    const footing = createSvgElement('rect', { x: '24', y: '90', width: '52', height: '6', rx: '3' });
+    group.append(body, base, footing);
+
+    const mane = createSvgElement('path', {
+      d: 'M52 24 C60 30 62 40 56 48',
+      fill: 'none',
+      stroke: accentColor,
+      'stroke-width': '3',
+      'stroke-linecap': 'round'
+    });
+    const eye = createSvgElement('circle', { cx: '58', cy: '36', r: '3.2', fill: accentColor, stroke: 'none' });
+    return [mane, eye];
+  },
+  b: ({ group, accentColor, shadowColor }) => {
+    const cap = createSvgElement('circle', { cx: '50', cy: '24', r: '11' });
+    const body = createSvgElement('path', {
+      d: 'M50 12 C38 12 32 28 42 38 L36 54 C32 64 38 72 44 78 V82 H56 V78 C62 72 68 64 64 54 L58 38 C68 28 62 12 50 12 Z'
+    });
+    const collar = createSvgElement('rect', { x: '36', y: '72', width: '28', height: '8', rx: '4' });
+    const base = createSvgElement('rect', { x: '26', y: '86', width: '48', height: '8', rx: '3' });
+    const footing = createSvgElement('rect', { x: '24', y: '92', width: '52', height: '6', rx: '3' });
+    group.append(cap, body, collar, base, footing);
+
+    const cut = createSvgElement('path', {
+      d: 'M50 22 C56 32 44 40 58 54',
+      fill: 'none',
+      stroke: accentColor,
+      'stroke-width': '3',
+      'stroke-linecap': 'round'
+    });
+    const shadow = createSvgElement('path', {
+      d: 'M42 74 Q50 68 58 74',
+      fill: 'none',
+      stroke: shadowColor,
+      'stroke-width': '3',
+      'stroke-linecap': 'round'
+    });
+    return [cut, shadow];
+  },
+  q: ({ group, accentColor }) => {
+    const skirt = createSvgElement('path', { d: 'M30 84 H70 L62 48 H38 Z' });
+    const bodice = createSvgElement('rect', { x: '38', y: '48', width: '24', height: '12', rx: '6' });
+    const torso = createSvgElement('path', { d: 'M44 48 C36 32 40 22 50 18 C60 22 64 32 56 48 Z' });
+    const collar = createSvgElement('rect', { x: '36', y: '72', width: '28', height: '8', rx: '4' });
+    const base = createSvgElement('rect', { x: '24', y: '88', width: '52', height: '8', rx: '4' });
+    const footing = createSvgElement('rect', { x: '22', y: '94', width: '56', height: '6', rx: '3' });
+    group.append(skirt, bodice, torso, collar, base, footing);
+
+    const crown = createSvgElement('polygon', {
+      points: '40,20 46,8 50,20 54,8 60,20 50,26',
+      fill: accentColor,
+      stroke: 'none',
+      opacity: '0.85'
+    });
+    const jewel = createSvgElement('circle', { cx: '46', cy: '12', r: '2.4', fill: '#ffd166', stroke: 'none' });
+    const jewelTwo = createSvgElement('circle', { cx: '54', cy: '12', r: '2.4', fill: '#ffd166', stroke: 'none' });
+    const tiara = createSvgElement('path', {
+      d: 'M40 20 Q50 28 60 20',
+      fill: 'none',
+      stroke: accentColor,
+      'stroke-width': '3',
+      'stroke-linecap': 'round'
+    });
+    return [crown, jewel, jewelTwo, tiara];
+  },
+  k: ({ group, accentColor }) => {
+    const skirt = createSvgElement('path', { d: 'M32 84 H68 L60 50 H40 Z' });
+    const bodice = createSvgElement('rect', { x: '40', y: '50', width: '20', height: '14', rx: '6' });
+    const torso = createSvgElement('path', { d: 'M44 50 C38 38 42 24 50 20 C58 24 62 38 56 50 Z' });
+    const collar = createSvgElement('rect', { x: '36', y: '72', width: '28', height: '8', rx: '4' });
+    const base = createSvgElement('rect', { x: '24', y: '88', width: '52', height: '8', rx: '4' });
+    const footing = createSvgElement('rect', { x: '22', y: '94', width: '56', height: '6', rx: '3' });
+    group.append(skirt, bodice, torso, collar, base, footing);
+
+    const crossVertical = createSvgElement('rect', { x: '47', y: '12', width: '6', height: '20', rx: '3' });
+    const crossHorizontal = createSvgElement('rect', { x: '42', y: '18', width: '16', height: '6', rx: '3' });
+    const crownBand = createSvgElement('rect', { x: '38', y: '32', width: '24', height: '6', rx: '3' });
+    crossVertical.setAttribute('fill', accentColor);
+    crossHorizontal.setAttribute('fill', accentColor);
+    crownBand.setAttribute('fill', accentColor);
+    return [crossVertical, crossHorizontal, crownBand];
+  }
+};
+
+function createPieceArt(pieceType, color) {
+  const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'piece-art', role: 'presentation', focusable: 'false' });
+  const gradientId = createGradient(svg, color);
+  const group = createSvgElement('g', {
+    fill: `url(#${gradientId})`,
+    stroke: color === 'white' ? 'rgba(40, 52, 82, 0.45)' : 'rgba(255, 255, 255, 0.35)',
+    'stroke-linejoin': 'round',
+    'stroke-linecap': 'round'
+  });
+
+  const accentColor = color === 'white' ? 'rgba(255, 255, 255, 0.78)' : 'rgba(255, 255, 255, 0.65)';
+  const shadowColor = color === 'white' ? 'rgba(60, 72, 104, 0.45)' : 'rgba(0, 0, 0, 0.55)';
+
+  const factory = pieceArtFactories[pieceType];
+  const overlays = factory ? factory({ group, color, accentColor, shadowColor }) : [];
+
+  svg.appendChild(group);
+  if (Array.isArray(overlays)) {
+    overlays.forEach((overlay) => {
+      if (overlay) {
+        if (!overlay.getAttribute('stroke') && overlay.tagName !== 'circle') {
+          overlay.setAttribute('stroke', 'none');
+        }
+        svg.appendChild(overlay);
+      }
+    });
+  }
+
+  return svg;
+}
+
+function renderLeaderboard() {
+  if (!leaderboardList) return;
+  leaderboardList.innerHTML = '';
+  leaderboardData.forEach((entry) => {
+    const item = document.createElement('li');
+    item.textContent = `${entry.name} — ${entry.rating}`;
+    leaderboardList.appendChild(item);
+  });
+}
+
+function getSelectedMenuDifficulty() {
+  if (!menuDifficultyOptions || menuDifficultyOptions.length === 0) {
+    return pendingSettings.difficulty;
+  }
+  const selected = Array.from(menuDifficultyOptions).find((input) => input.checked);
+  return selected ? selected.value : pendingSettings.difficulty;
+}
+
+function setMenuDifficulty(value) {
+  if (!menuDifficultyOptions || menuDifficultyOptions.length === 0) return;
+  let found = false;
+  menuDifficultyOptions.forEach((input) => {
+    const match = input.value === value;
+    input.checked = match;
+    if (match) {
+      found = true;
+    }
+  });
+  if (!found) {
+    menuDifficultyOptions[0].checked = true;
+  }
+}
+
+function updateDifficultyVisibility() {
+  const isSinglePlayer = pendingSettings.mode !== 'human';
+  if (menuDifficultyGroup) {
+    menuDifficultyGroup.classList.toggle('hidden', !isSinglePlayer);
+  }
+  if (sessionDifficultyWrapper) {
+    sessionDifficultyWrapper.classList.toggle('hidden', !isSinglePlayer);
+  }
+}
+
+function formatDifficultyLabel(value) {
+  if (!value) return '';
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function applySettingsToGameUI() {
+  if (menuModeSelect) {
+    menuModeSelect.value = pendingSettings.mode;
+  }
+  setMenuDifficulty(pendingSettings.difficulty);
+  if (activeModeLabel) {
+    activeModeLabel.textContent = modeLabels[pendingSettings.mode] || modeLabels.human;
+  }
+  if (activeDifficultyLabel) {
+    activeDifficultyLabel.textContent = formatDifficultyLabel(pendingSettings.difficulty);
+  }
+  updateDifficultyVisibility();
+}
+
+function updateSoundLabels() {
+  if (menuSoundStatusLabel) {
+    menuSoundStatusLabel.textContent = soundEnabled ? 'Enabled' : 'Muted';
+  }
+  if (inGameSoundStatusLabel) {
+    inGameSoundStatusLabel.textContent = soundEnabled ? 'Sound On' : 'Sound Off';
+  }
+}
+
+function setSoundEnabled(enabled) {
+  soundEnabled = !!enabled;
+  if (menuSoundToggle) {
+    menuSoundToggle.checked = soundEnabled;
+  }
+  if (inGameSoundToggle) {
+    inGameSoundToggle.checked = soundEnabled;
+  }
+  updateSoundLabels();
+  if (soundEnabled) {
+    bindAudioUnlock();
+  }
+}
+
+function showMenuScreen() {
+  if (menuScreen) {
+    menuScreen.classList.remove('hidden');
+  }
+  if (gameScreen) {
+    gameScreen.classList.add('hidden');
+  }
+}
+
+function showGameScreen() {
+  if (menuScreen) {
+    menuScreen.classList.add('hidden');
+  }
+  if (gameScreen) {
+    gameScreen.classList.remove('hidden');
+  }
+}
 
 const SOUND_PROFILES = {
   move: { frequency: 620, duration: 0.22, type: 'triangle', gain: 0.25 },
@@ -86,6 +431,7 @@ function bindAudioUnlock() {
 }
 
 function playSoundCue(kind) {
+  if (!soundEnabled) return;
   const profile = SOUND_PROFILES[kind];
   if (!profile) return;
   const ctx = ensureAudioContext();
@@ -178,7 +524,6 @@ function getPieceColor(piece) {
 
 function createPieceElement(piece) {
   const pieceType = piece.toLowerCase();
-  const label = pieceLabels[pieceType] || '';
   const color = getPieceColor(piece);
   const element = document.createElement('div');
   element.classList.add('piece');
@@ -188,11 +533,10 @@ function createPieceElement(piece) {
   }
 
   element.classList.add(`piece-${pieceType}`);
-  const face = document.createElement('span');
-  face.classList.add('piece-face');
-  face.textContent = label;
-  element.appendChild(face);
-  element.setAttribute('aria-hidden', 'true');
+  const art = createPieceArt(pieceType, color);
+  element.appendChild(art);
+  element.setAttribute('role', 'img');
+  element.setAttribute('aria-label', describePiece(piece));
 
   return element;
 }
@@ -820,16 +1164,10 @@ function renderBoard(state) {
 }
 
 function describePiece(piece) {
+  if (!piece) return 'empty square';
   const color = getPieceColor(piece);
-  const typeMap = {
-    k: 'king',
-    q: 'queen',
-    r: 'rook',
-    b: 'bishop',
-    n: 'knight',
-    p: 'pawn'
-  };
-  const type = typeMap[piece.toLowerCase()];
+  const type = pieceTypeNames[piece.toLowerCase()];
+  if (!color || !type) return 'empty square';
   return `${color} ${type}`;
 }
 
@@ -839,6 +1177,7 @@ function clearSelection() {
 }
 
 function handleSquareClick(row, col) {
+  if (!gameState) return;
   if (gameState.gameOver) return;
   if (isAITurn()) return;
 
@@ -868,6 +1207,7 @@ function handleSquareClick(row, col) {
 }
 
 function updateStatus(state) {
+  if (!state) return;
   const turnText = state.turn === 'white' ? 'White to move' : 'Black to move';
   turnIndicator.textContent = turnText;
 
@@ -926,11 +1266,13 @@ function afterMoveUpdate() {
 }
 
 function isAITurn() {
+  if (!gameState) return false;
   if (gameState.mode === 'human') return false;
   return gameState.turn === gameState.aiColor;
 }
 
 function maybeTriggerAI() {
+  if (!gameState) return;
   if (!isAITurn() || gameState.gameOver) return;
   setTimeout(() => {
     const move = pickAIMove(gameState);
@@ -944,9 +1286,11 @@ function maybeTriggerAI() {
   }, 200);
 }
 
-function startNewGame() {
-  const mode = modeSelect.value;
-  const difficulty = difficultySelect.value;
+function startNewGame(options = {}) {
+  const mode = options.mode || pendingSettings.mode;
+  const difficulty = options.difficulty || pendingSettings.difficulty;
+  pendingSettings = { mode, difficulty };
+  applySettingsToGameUI();
   gameState = createInitialState({ mode, difficulty });
   clearSelection();
   renderBoard(gameState);
@@ -958,34 +1302,92 @@ function setupUI() {
   boardElement = document.getElementById('chessboard');
   turnIndicator = document.getElementById('turn-indicator');
   statusIndicator = document.getElementById('game-status');
-  modeSelect = document.getElementById('mode-select');
-  difficultySelect = document.getElementById('difficulty-select');
+  menuScreen = document.getElementById('menu-screen');
+  gameScreen = document.getElementById('game-screen');
+  menuModeSelect = document.getElementById('menu-mode');
+  menuDifficultyOptions = document.querySelectorAll('input[name="menu-difficulty"]');
+  menuDifficultyGroup = document.getElementById('difficulty-menu-group');
+  menuSoundToggle = document.getElementById('sound-toggle');
+  inGameSoundToggle = document.getElementById('in-game-sound-toggle');
+  playButton = document.getElementById('play-button');
+  backToMenuButton = document.getElementById('back-to-menu');
+  activeModeLabel = document.getElementById('active-mode');
+  activeDifficultyLabel = document.getElementById('active-difficulty');
+  sessionDifficultyWrapper = document.querySelector('.session-difficulty');
+  leaderboardList = document.getElementById('leaderboard-list');
+  menuSoundStatusLabel = document.querySelector('#menu-screen .sound-group .toggle-label');
+  inGameSoundStatusLabel = document.querySelector('#game-screen .inline-toggle .toggle-label');
   newGameButton = document.getElementById('new-game');
 
   bindAudioUnlock();
 
-  modeSelect.addEventListener('change', () => {
-    gameState.mode = modeSelect.value;
-    gameState.aiColor = gameState.mode === 'ai-white' ? 'black' : gameState.mode === 'ai-black' ? 'white' : null;
-    startNewGame();
-  });
+  if (menuModeSelect) {
+    menuModeSelect.addEventListener('change', () => {
+      pendingSettings.mode = menuModeSelect.value;
+      updateDifficultyVisibility();
+      applySettingsToGameUI();
+    });
+  }
 
-  difficultySelect.addEventListener('change', () => {
-    gameState.difficulty = difficultySelect.value;
-  });
+  if (menuDifficultyOptions) {
+    menuDifficultyOptions.forEach((input) => {
+      input.addEventListener('change', () => {
+        pendingSettings.difficulty = getSelectedMenuDifficulty();
+        applySettingsToGameUI();
+      });
+    });
+  }
 
-  newGameButton.addEventListener('click', () => {
-    startNewGame();
-  });
+  if (menuSoundToggle) {
+    menuSoundToggle.addEventListener('change', () => {
+      setSoundEnabled(menuSoundToggle.checked);
+    });
+  }
+
+  if (inGameSoundToggle) {
+    inGameSoundToggle.addEventListener('change', () => {
+      setSoundEnabled(inGameSoundToggle.checked);
+    });
+  }
+
+  if (playButton) {
+    playButton.addEventListener('click', () => {
+      pendingSettings.mode = menuModeSelect ? menuModeSelect.value : pendingSettings.mode;
+      pendingSettings.difficulty = getSelectedMenuDifficulty();
+      setSoundEnabled(menuSoundToggle ? menuSoundToggle.checked : soundEnabled);
+      applySettingsToGameUI();
+      showGameScreen();
+      startNewGame();
+    });
+  }
+
+  if (backToMenuButton) {
+    backToMenuButton.addEventListener('click', () => {
+      showMenuScreen();
+      statusIndicator.textContent = 'Select Play from the menu to begin.';
+      turnIndicator.textContent = 'White to move';
+    });
+  }
+
+  if (newGameButton) {
+    newGameButton.addEventListener('click', () => {
+      startNewGame();
+    });
+  }
+
+  pendingSettings.mode = menuModeSelect ? menuModeSelect.value : pendingSettings.mode;
+  pendingSettings.difficulty = getSelectedMenuDifficulty();
 }
 
 function init() {
   setupUI();
   buildBoard();
-  gameState = createInitialState({ mode: modeSelect.value, difficulty: difficultySelect.value });
-  renderBoard(gameState);
-  updateStatus(gameState);
-  maybeTriggerAI();
+  renderLeaderboard();
+  setMenuDifficulty(pendingSettings.difficulty);
+  updateDifficultyVisibility();
+  applySettingsToGameUI();
+  setSoundEnabled(soundEnabled);
+  showMenuScreen();
 }
 
 document.addEventListener('DOMContentLoaded', init);
