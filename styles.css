@@ -22,10 +22,10 @@
   --square-dark: linear-gradient(135deg, rgba(0, 0, 0, 0.25), rgba(255, 255, 255, 0.05)),
     repeating-linear-gradient(45deg, #7c4f28, #7c4f28 12px, #8e6033 12px, #8e6033 24px);
   --square-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.18));
-  --piece-white-body: radial-gradient(circle at 30% 25%, #ffffff, #f8f1d6 45%, #e3cf92 72%, #b99556 100%);
-  --piece-black-body: radial-gradient(circle at 30% 25%, #4a365d, #281a38 55%, #140a24 100%);
-  --piece-white-symbol: #33231a;
-  --piece-black-symbol: #f1ecff;
+  --piece-white-body: radial-gradient(circle at 30% 25%, #ffffff, #f2f2f2 55%, #dfdfdf 80%, #cecece 100%);
+  --piece-black-body: radial-gradient(circle at 30% 25%, #4a4a4a, #2e2e2e 60%, #161616 100%);
+  --piece-white-symbol: #1e1e1e;
+  --piece-black-symbol: #f7f7f7;
   --piece-shadow: rgba(0, 0, 0, 0.55);
   font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -39,10 +39,6 @@ body.theme-metal {
   --square-dark: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(255, 255, 255, 0.08)),
     repeating-linear-gradient(45deg, #5f6e80, #5f6e80 12px, #435060 12px, #435060 24px);
   --square-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.25));
-  --piece-white-body: radial-gradient(circle at 30% 25%, #f7f8fb, #dce4f2 45%, #b6c3d8 80%, #8b99af 100%);
-  --piece-black-body: radial-gradient(circle at 30% 25%, #626d7a, #353f4c 60%, #161c23 100%);
-  --piece-white-symbol: #1e2330;
-  --piece-black-symbol: #ecf2ff;
   --capture-flash: rgba(198, 226, 255, 0.55);
 }
 
@@ -53,26 +49,9 @@ body.theme-glass {
   --square-light: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(161, 212, 229, 0.25));
   --square-dark: linear-gradient(135deg, rgba(48, 92, 118, 0.65), rgba(18, 44, 66, 0.85));
   --square-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(15, 32, 48, 0.28));
-  --piece-white-body: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.9), rgba(214, 243, 255, 0.75) 45%, rgba(159, 214, 236, 0.65) 80%, rgba(102, 158, 196, 0.75) 100%);
-  --piece-black-body: radial-gradient(circle at 30% 25%, rgba(36, 58, 83, 0.92), rgba(17, 38, 60, 0.85) 60%, rgba(9, 21, 36, 0.95) 100%);
-  --piece-white-symbol: #0f2538;
-  --piece-black-symbol: #f1f8ff;
   --capture-flash: rgba(196, 248, 255, 0.55);
 }
 
-body.theme-scifi {
-  --board-surface: linear-gradient(135deg, rgba(64, 20, 94, 0.9), rgba(12, 28, 68, 0.95));
-  --board-frame: rgba(98, 226, 255, 0.65);
-  --board-shadow: rgba(6, 12, 32, 0.75);
-  --square-light: linear-gradient(135deg, rgba(0, 255, 214, 0.18), rgba(26, 14, 60, 0.4));
-  --square-dark: linear-gradient(135deg, rgba(102, 0, 204, 0.45), rgba(5, 10, 28, 0.75));
-  --square-overlay: linear-gradient(135deg, rgba(0, 255, 214, 0.18), rgba(102, 0, 204, 0.3));
-  --piece-white-body: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.95), rgba(178, 255, 246, 0.85) 45%, rgba(98, 226, 255, 0.8) 80%, rgba(46, 141, 255, 0.9) 100%);
-  --piece-black-body: radial-gradient(circle at 30% 25%, rgba(255, 0, 127, 0.8), rgba(120, 0, 255, 0.8) 55%, rgba(14, 22, 60, 0.95) 100%);
-  --piece-white-symbol: #071227;
-  --piece-black-symbol: #fef7ff;
-  --capture-flash: rgba(255, 84, 233, 0.55);
-}
 
 * {
   box-sizing: border-box;
@@ -96,10 +75,6 @@ body.theme-metal {
 
 body.theme-glass {
   background: radial-gradient(circle at top, #5fa4c2, #0a1a27 75%);
-}
-
-body.theme-scifi {
-  background: radial-gradient(circle at top, #210431, #020512 75%);
 }
 
 .page {
@@ -386,13 +361,6 @@ button:hover {
       rgba(129, 194, 221, 0.75) 12px, rgba(129, 194, 221, 0.75) 24px);
 }
 
-.theme-option-scifi span::before {
-  background:
-    linear-gradient(135deg, rgba(0, 255, 214, 0.28), rgba(102, 0, 204, 0.3)),
-    repeating-linear-gradient(45deg, rgba(80, 220, 255, 0.85), rgba(80, 220, 255, 0.85) 10px,
-      rgba(168, 90, 255, 0.85) 10px, rgba(168, 90, 255, 0.85) 20px);
-}
-
 .theme-option input:focus-visible + span {
   outline: 2px solid rgba(255, 255, 255, 0.85);
   outline-offset: 3px;
@@ -446,35 +414,6 @@ button:hover {
 
 .toggle-label {
   font-size: 0.95rem;
-}
-
-.leaderboard {
-  background: rgba(33, 24, 58, 0.7);
-  border-radius: 16px;
-  padding: 1rem 1.2rem;
-  border: 1px solid rgba(214, 180, 110, 0.4);
-  box-shadow: inset 0 1px 14px rgba(0, 0, 0, 0.25);
-}
-
-.leaderboard h3 {
-  margin-top: 0;
-  margin-bottom: 0.6rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 0.95rem;
-  color: var(--royal-gold);
-}
-
-.leaderboard ol {
-  margin: 0;
-  padding-left: 1.4rem;
-  display: grid;
-  gap: 0.35rem;
-  font-size: 0.92rem;
-}
-
-.leaderboard li {
-  color: rgba(244, 231, 255, 0.8);
 }
 
 .game-screen {

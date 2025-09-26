@@ -6,7 +6,7 @@ A browser-based chess experience featuring full rule enforcement, two-player hot
 
 1. Clone the repository.
 2. Open `index.html` in any modern browser.
-3. Use the main menu to pick a battle mode (single-player or two-player), adjust the AI difficulty when available, preview the board & piece theme, toggle sound and special FX, and review the leaderboard. Press **Play** to enter the board.
+3. Use the main menu to pick a battle mode (single-player or two-player), adjust the AI difficulty when available, preview the board & piece theme, and toggle sound and special FX. Press **Play** to enter the board.
 
 ## Features
 
@@ -15,10 +15,11 @@ A browser-based chess experience featuring full rule enforcement, two-player hot
 - **Two-player support** – pass-and-play with alternating turns (white moves first).
 - **Computer opponent** – battle an AI powered by a minimax search with four selectable depths: Easy, Normal, Hard, and Pro.
 - **Polished presentation** – premium board textures, sculpted 3D-inspired pieces, and smooth motion bring every turn to life.
-- **Theme selector** – instantly swap among Walnut & Ivory, Forged Steel, Crystal Glass, or Cosmic Neon sets before or during a match.
+- **High-contrast pieces** – white and black armies remain easy to distinguish regardless of the active theme.
+- **Theme selector** – instantly swap among Walnut & Ivory, Forged Steel, or Crystal Glass sets before or during a match.
 - **Immersive feedback** – unique sound cues, capture flashes, and responsive camera shake underscore key moments.
 - **On-demand FX control** – dedicated toggles let you enable or mute audio and animation feedback from the menu or the in-game toolbar.
-- **Guided entry** – a full-screen main menu lets you configure mode, difficulty, sound, and review a sample leaderboard before starting play.
+- **Guided entry** – a full-screen main menu lets you configure mode, difficulty, sound, and visuals before starting play.
 - **Responsive layout** – controls and the board adapt fluidly from desktops to phones and tablets.
 - **Accessible controls** – keyboard and mouse friendly square selection with visual move hints.
 

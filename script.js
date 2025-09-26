@@ -28,14 +28,6 @@ const difficultyDepth = {
   pro: 4
 };
 
-const leaderboardData = [
-  { name: 'Caleb', rating: 2480 },
-  { name: 'Ivy', rating: 2365 },
-  { name: 'Noah', rating: 2290 },
-  { name: 'Mira', rating: 2215 },
-  { name: 'Aris', rating: 2140 }
-];
-
 const modeLabels = {
   human: 'Two Players (Local)',
   'ai-white': 'Single Player — You Play White',
@@ -54,8 +46,7 @@ const pieceTypeNames = {
 const boardThemes = {
   wood: { label: 'Walnut & Ivory' },
   metal: { label: 'Forged Steel' },
-  glass: { label: 'Crystal Glass' },
-  scifi: { label: 'Cosmic Neon' }
+  glass: { label: 'Crystal Glass' }
 };
 
 let boardElement;
@@ -76,7 +67,6 @@ let activeModeLabel;
 let activeDifficultyLabel;
 let activeThemeLabel;
 let sessionDifficultyWrapper;
-let leaderboardList;
 let menuSoundStatusLabel;
 let inGameSoundStatusLabel;
 let menuAnimationStatusLabel;
@@ -108,16 +98,6 @@ const pieceSymbols = {
   q: { white: '♕', black: '♛' },
   k: { white: '♔', black: '♚' }
 };
-
-function renderLeaderboard() {
-  if (!leaderboardList) return;
-  leaderboardList.innerHTML = '';
-  leaderboardData.forEach((entry) => {
-    const item = document.createElement('li');
-    item.textContent = `${entry.name} — ${entry.rating}`;
-    leaderboardList.appendChild(item);
-  });
-}
 
 function getSelectedMenuDifficulty() {
   if (!menuDifficultyOptions || menuDifficultyOptions.length === 0) {
@@ -1304,7 +1284,6 @@ function setupUI() {
   activeDifficultyLabel = document.getElementById('active-difficulty');
   activeThemeLabel = document.getElementById('active-theme');
   sessionDifficultyWrapper = document.querySelector('.session-difficulty');
-  leaderboardList = document.getElementById('leaderboard-list');
   menuSoundStatusLabel = document.getElementById('menu-sound-status');
   inGameSoundStatusLabel = document.getElementById('game-sound-status');
   menuAnimationStatusLabel = document.getElementById('menu-animation-status');
@@ -1411,7 +1390,6 @@ function init() {
   setupUI();
   applyThemeToDocument(pendingSettings.theme);
   buildBoard();
-  renderLeaderboard();
   setMenuDifficulty(pendingSettings.difficulty);
   updateDifficultyVisibility();
   applySettingsToGameUI();
