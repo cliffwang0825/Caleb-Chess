@@ -12,19 +12,13 @@ const initialBoard = [
   ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
 ];
 
-const pieceSymbols = {
-  k: '\u265A',
-  q: '\u265B',
-  r: '\u265C',
-  b: '\u265D',
-  n: '\u265E',
-  p: '\u265F',
-  K: '\u2654',
-  Q: '\u2655',
-  R: '\u2656',
-  B: '\u2657',
-  N: '\u2658',
-  P: '\u2659'
+const pieceLabels = {
+  k: 'K',
+  q: 'Q',
+  r: 'R',
+  b: 'B',
+  n: 'N',
+  p: 'P'
 };
 
 const pieceValues = {
@@ -92,7 +86,6 @@ function buildBoard() {
       const isDark = (rankIndex + fileIndex) % 2 === 1;
       square.classList.add(isDark ? 'dark' : 'light');
       const coordinate = `${files[fileIndex]}${ranks[rankIndex]}`;
-      square.dataset.coordinate = coordinate;
       square.tabIndex = 0;
       square.setAttribute('role', 'gridcell');
       square.setAttribute('aria-label', `Square ${coordinate}`);
@@ -116,6 +109,24 @@ function getSquareElement(row, col) {
 function getPieceColor(piece) {
   if (!piece) return null;
   return piece === piece.toUpperCase() ? 'white' : 'black';
+}
+
+function createPieceElement(piece) {
+  const pieceType = piece.toLowerCase();
+  const label = pieceLabels[pieceType] || '';
+  const color = getPieceColor(piece);
+  const element = document.createElement('div');
+  element.classList.add('piece');
+
+  if (color) {
+    element.classList.add(color);
+  }
+
+  element.classList.add(`piece-${pieceType}`);
+  element.textContent = label;
+  element.setAttribute('aria-hidden', 'true');
+
+  return element;
 }
 
 function toCoordinate(row, col) {
@@ -680,10 +691,8 @@ function renderBoard(state) {
       square.classList.remove('selected', 'legal-move', 'check');
 
       if (piece) {
-        const span = document.createElement('span');
-        span.classList.add('piece');
-        span.textContent = pieceSymbols[piece];
-        square.appendChild(span);
+        const pieceElement = createPieceElement(piece);
+        square.appendChild(pieceElement);
         square.setAttribute('aria-label', `Square ${toCoordinate(row, col)} with ${describePiece(piece)}`);
       } else {
         square.setAttribute('aria-label', `Square ${toCoordinate(row, col)}`);
