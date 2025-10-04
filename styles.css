@@ -24,11 +24,9 @@
   --board-surface: linear-gradient(135deg, rgba(86, 63, 38, 0.9), rgba(44, 31, 20, 0.98));
   --board-frame: rgba(214, 180, 110, 0.95);
   --board-shadow: rgba(0, 0, 0, 0.55);
-  --square-light: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(112, 79, 45, 0.08)),
-    repeating-linear-gradient(45deg, #f2ddc2, #f2ddc2 12px, #e8c89f 12px, #e8c89f 24px);
-  --square-dark: linear-gradient(135deg, rgba(0, 0, 0, 0.25), rgba(255, 255, 255, 0.05)),
-    repeating-linear-gradient(45deg, #7c4f28, #7c4f28 12px, #8e6033 12px, #8e6033 24px);
-  --square-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.18));
+  --square-light: #f2ddc2;
+  --square-dark: #8e6033;
+  --square-overlay: rgba(255, 255, 255, 0.08);
   --piece-white-body: radial-gradient(circle at 30% 26%, rgba(255, 255, 255, 0.95) 0%, rgba(232, 244, 255, 0.8) 48%, rgba(188, 214, 255, 0.45) 78%, rgba(168, 196, 240, 0.18) 100%);
   --piece-black-body: radial-gradient(circle at 34% 26%, rgba(34, 38, 56, 0.94) 0%, rgba(20, 22, 36, 0.92) 42%, rgba(10, 12, 22, 0.88) 68%, rgba(6, 8, 16, 0.82) 82%, rgba(2, 3, 8, 0.78) 100%);
   --piece-white-symbol: rgba(52, 72, 112, 0.82);
@@ -44,11 +42,9 @@ body.theme-metal {
   --board-surface: linear-gradient(135deg, rgba(92, 108, 128, 0.92), rgba(38, 46, 60, 0.98));
   --board-frame: rgba(180, 190, 210, 0.9);
   --board-shadow: rgba(16, 24, 34, 0.7);
-  --square-light: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(120, 132, 150, 0.1)),
-    repeating-linear-gradient(45deg, #d8e2f0, #d8e2f0 12px, #bcc7d6 12px, #bcc7d6 24px);
-  --square-dark: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(255, 255, 255, 0.08)),
-    repeating-linear-gradient(45deg, #5f6e80, #5f6e80 12px, #435060 12px, #435060 24px);
-  --square-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.25));
+  --square-light: #d8e2f0;
+  --square-dark: #435060;
+  --square-overlay: rgba(255, 255, 255, 0.12);
   --capture-flash: rgba(198, 226, 255, 0.55);
 }
 
@@ -56,9 +52,9 @@ body.theme-glass {
   --board-surface: linear-gradient(135deg, rgba(150, 204, 223, 0.82), rgba(60, 95, 124, 0.95));
   --board-frame: rgba(186, 226, 242, 0.85);
   --board-shadow: rgba(8, 22, 32, 0.55);
-  --square-light: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(161, 212, 229, 0.25));
-  --square-dark: linear-gradient(135deg, rgba(48, 92, 118, 0.65), rgba(18, 44, 66, 0.85));
-  --square-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(15, 32, 48, 0.28));
+  --square-light: #c8e5f1;
+  --square-dark: #244a63;
+  --square-overlay: rgba(255, 255, 255, 0.18);
   --capture-flash: rgba(196, 248, 255, 0.55);
 }
 
@@ -871,8 +867,8 @@ button:hover {
   font-size: clamp(2rem, 5.6vw, 3.1rem);
   transition: transform 0.25s ease, filter 0.25s ease, box-shadow 0.25s ease;
   border-radius: 50%;
-  box-shadow: 0 14px 24px rgba(3, 6, 18, 0.55), inset 0 3px 8px rgba(255, 255, 255, 0.55),
-    inset 0 -6px 10px rgba(12, 16, 32, 0.45);
+  box-shadow: 0 14px 24px rgba(3, 6, 18, 0.55), inset 0 3px 8px rgba(255, 255, 255, 0.45),
+    inset 0 -6px 10px rgba(12, 16, 32, 0.4);
   transform-style: preserve-3d;
   backdrop-filter: blur(1.2px) saturate(120%);
 }
@@ -880,25 +876,18 @@ button:hover {
 .square .piece.white {
   color: var(--piece-white-symbol);
   background: var(--piece-white-body);
-  border: 1px solid rgba(222, 236, 255, 0.6);
 }
 
 .square .piece.black {
   color: var(--piece-black-symbol);
   background: var(--piece-black-body);
-  border: 1px solid rgba(110, 134, 186, 0.5);
-}
-
-.square .piece::before,
-.square .piece::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
 }
 
 .square .piece::before {
+  content: '';
+  position: absolute;
   inset: 0;
+  border-radius: 50%;
   background: var(--piece-core-glow);
   mix-blend-mode: screen;
   opacity: 0.85;
@@ -910,20 +899,6 @@ button:hover {
 
 .square .piece.black::before {
   box-shadow: inset 0 0 0 1px rgba(48, 56, 88, 0.55);
-}
-
-.square .piece.white::after {
-  inset: 4% 5%;
-  background: var(--piece-white-rim);
-  opacity: 0.9;
-  mix-blend-mode: screen;
-}
-
-.square .piece.black::after {
-  inset: 6% 8%;
-  background: var(--piece-black-rim);
-  opacity: 0.75;
-  mix-blend-mode: lighten;
 }
 
 .piece-symbol {
