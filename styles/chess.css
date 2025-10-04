@@ -1,0 +1,114 @@
+:root {
+  color-scheme: light dark;
+  --board-light: #f4e5c5;
+  --board-dark: #b8875f;
+  --board-frame: #8b5a2b;
+  --board-shadow: rgba(25, 15, 5, 0.45);
+  --text-color: #2e1d13;
+  --accent: #c48f51;
+  font-family: "Noto Serif TC", "Times New Roman", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 20% 20%, #fdf8ef, #e2d1b3 65%, #d0b28c);
+  color: var(--text-color);
+}
+
+.page {
+  padding: 2.5rem clamp(1rem, 2vw, 2rem);
+}
+
+.board-panel {
+  max-width: min(90vw, 640px);
+  display: grid;
+  gap: 1.5rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.board-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: clamp(1.75rem, 2.6vw + 1rem, 2.75rem);
+  letter-spacing: 0.08em;
+}
+
+.board-header p {
+  margin: 0;
+  font-size: 1rem;
+  color: rgba(46, 29, 19, 0.8);
+}
+
+.board {
+  width: min(85vw, 520px);
+  aspect-ratio: 1 / 1;
+  background: var(--board-frame);
+  padding: clamp(0.75rem, 1.4vw, 1.25rem);
+  border-radius: 18px;
+  box-shadow: 0 18px 35px var(--board-shadow);
+  display: grid;
+  grid-template: repeat(8, 1fr) / repeat(8, 1fr);
+  gap: clamp(3px, 0.6vw, 6px);
+}
+
+.square {
+  position: relative;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.square.light {
+  background: var(--board-light);
+}
+
+.square.dark {
+  background: var(--board-dark);
+}
+
+.square:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.18);
+}
+
+.piece {
+  width: 72%;
+  height: 72%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  image-rendering: optimizeQuality;
+}
+
+.piece.white-king { background-image: url("../public/assets/pieces/white-king.svg"); }
+.piece.white-queen { background-image: url("../public/assets/pieces/white-queen.svg"); }
+.piece.white-rook { background-image: url("../public/assets/pieces/white-rook.svg"); }
+.piece.white-bishop { background-image: url("../public/assets/pieces/white-bishop.svg"); }
+.piece.white-knight { background-image: url("../public/assets/pieces/white-knight.svg"); }
+.piece.white-pawn { background-image: url("../public/assets/pieces/white-pawn.svg"); }
+.piece.black-king { background-image: url("../public/assets/pieces/black-king.svg"); }
+.piece.black-queen { background-image: url("../public/assets/pieces/black-queen.svg"); }
+.piece.black-rook { background-image: url("../public/assets/pieces/black-rook.svg"); }
+.piece.black-bishop { background-image: url("../public/assets/pieces/black-bishop.svg"); }
+.piece.black-knight { background-image: url("../public/assets/pieces/black-knight.svg"); }
+.piece.black-pawn { background-image: url("../public/assets/pieces/black-pawn.svg"); }
+
+@media (max-width: 520px) {
+  .board {
+    gap: clamp(2px, 1vw, 4px);
+  }
+
+  .piece {
+    width: 78%;
+    height: 78%;
+  }
+}
